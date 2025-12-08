@@ -77,7 +77,7 @@ Let’s break down the sequence of events. Before continuing, I will assume the 
 2. A bean of type `MeterManager` is created
 3. If a bean of type `MeterRegistry` doesn’t exist, the existing bean of type `MeterRegistry` contained in `MeterManager` is returned. This is confusing because, we already know that we have a bean of `MeterRegistry`. After all, `MeterManager` depends on it, making this completely redundant, but running the code confirms that this gets executed. Why?
 
-When `CompositeMeterRegistry` is created, it identifies beans that implement `MeterRegistry`. Through this search, it finds the `PrometheusMeterRegistry` via Micrometer dependency, then it finds it again through the `MeterConfig` configuration file, for some reason ignoring the `@ConditionalOnMissingBean` annotation. Why?
+When `CompositeMeterRegistry` is created, it identifies beans that implement `MeterRegistry`. Through this search, `PrometheusMeterRegistry` is found in the Micrometer dependency, then the same instance is found in the `MeterConfig` configuration file. For some reason the `@ConditionalOnMissingBean` annotation is ignored. Why?
 
 As it turns out, `@ConditionalOnBean` should only be used on auto-configured configuration files or the condition may not be honoured. This is even stated in the https://docs.spring.io/spring-boot/api/java/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html.
 
