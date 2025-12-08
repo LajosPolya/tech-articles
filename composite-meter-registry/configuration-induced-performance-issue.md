@@ -1,4 +1,4 @@
-# Configuration induced performance issue
+# How not reading the docs can introduce performance overhead
 
 A tale about how a seemingly benign \[mis]configuration resulted in wasted CPU cycles... and why you should always read the docs.
 
