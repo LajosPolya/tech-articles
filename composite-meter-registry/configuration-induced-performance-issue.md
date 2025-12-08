@@ -79,7 +79,7 @@ Let’s break down the sequence of events. Before continuing, I will assume the 
 
 When `CompositeMeterRegistry` is created, it identifies beans that implement `MeterRegistry`. Through this search, `PrometheusMeterRegistry` is found in the Micrometer dependency, then the same instance is found in the `MeterConfig` configuration file. For some reason the `@ConditionalOnMissingBean` annotation is ignored. Why?
 
-As it turns out, `@ConditionalOnBean` should only be used on auto-configured configuration files or the condition may not be honoured. This is even stated in the https://docs.spring.io/spring-boot/api/java/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html.
+As it turns out, `@ConditionalOnBean` should only be used on auto-configured configuration files or the condition may not be honoured. This is even stated in the [javadoc](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html).
 
 > The condition can only match the bean definitions that have been processed by the application context so far and, as such, it is strongly recommended to use this condition on auto-configuration classes only. If a candidate bean may be created by another auto-configuration, make sure that the one using this condition runs after.
   
