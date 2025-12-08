@@ -6,7 +6,7 @@ For the past two years, I’ve been working on an ad exchange written with the J
 
 My curiosity about the application’s performance has run me down the path of deciphering Java Flight Recorder (JFR) files via JDK Mission Control, diving deep into memory hotspots and operations that hog CPU cycles.
 
-While reviewing the list of our worst-performing methods, I noticed something curious, one function in particular: `IdentityHashMapIterator.hasNext()` uses about 0.6% of CPU cycles. This caught my attention because, as far as I know, the exchange doesn’t ubiquitously use this specific implementation of Map.
+While reviewing the list of our worst-performing methods, I noticed something curious, one function in particular: `IdentityHashMapIterator.hasNext` uses about 0.6% of CPU cycles. This caught my attention because, as far as I know, the exchange doesn’t ubiquitously use this specific implementation of `Map`.
 
 I stepped through the flame chart and discovered that this usage doesn’t even come from our codebase; it’s contained within Micrometer’s `CompositeCounter.increment` method. 
 
@@ -23,7 +23,7 @@ public void increment(double amount) {
 }
 ``` 
 
-In Java, the enhanced for loop is syntactic sugar for looping through a collection using its iterator’s `hasNext` and `next()` methods. To break down where `hasNext` is actually called, I disassembled the class file into assembly. In short, `getChildren` returns Map (which is an Iterable), and the enhanced for loop implicitly calls Iterator.hasNext and Iterator.next()
+In Java, the enhanced for loop is syntactic sugar for looping through a collection using its iterator’s `hasNext` and `next` methods. To break down where `hasNext` is actually called, I disassembled the class file into assembly. In short, `getChildren` returns `Map` (which is an `Iterable`), and the enhanced for loop implicitly calls `Iterator.hasNext` and `Iterator.next`.
 
 ```
 public void increment(double);
@@ -46,9 +46,9 @@ public void increment(double);
     41: return
 ```
 
-Zooming out a little further, why is `increment()` called in a loop?
+Zooming out a little further, why is `increment` called in a loop?
 
-Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When CompositeMeterRegistry creates a Counter, it creates a CompositeCounter which stores its various registries in an IdentityHashMap. When `CompositeCounter.increment()` is called, it loops through each Counter implementation and calls increment on each of them. What’s unusual is the `IdentityHashMap` only contains one element, `PrometheusMeterRegistry`. If it’s the only registry present at runtime, why isn’t it being injected directly?
+Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When CompositeMeterRegistry creates a Counter, it creates a CompositeCounter which stores its various registries in an `IdentityHashMap`. When `CompositeCounter.increment` is called, it loops through each Counter implementation and calls increment on each of them. What’s unusual is the `IdentityHashMap` only contains one element, `PrometheusMeterRegistry`. If it’s the only registry present at runtime, why isn’t it being injected directly?
 
 In our code, I found something that didn’t make any sense:
 
