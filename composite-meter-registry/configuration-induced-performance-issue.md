@@ -10,7 +10,7 @@ While reviewing the list of our worst-performing methods, I noticed something cu
   
 I stepped through the flame chart and discovered that this usage doesn’t even come from our codebase; it’s contained within Micrometer’s `CompositeCounter.increment` method.   
   
-![hasNext.png](Attachments/hasNext.png)  
+![hasNext.png](attachments/hasNext.png)  
   
 Diving into the `CompositeMeterRegistry.increment` method. Where is `hasNext` actually called?  
   
