@@ -1,6 +1,6 @@
 # Configuration induced performance issue
 
-A tale about how a seemingly benign \[mis]configuration resulted in wasted CPU cycles.
+A tale about how a seemingly benign \[mis]configuration resulted in wasted CPU cycles... and why you should always read the docs.
 
 For the past two years, I’ve been working on an ad exchange written with the Java Spring Framework. It’s an incredible piece of software which transacts millions of auctions every second in an environment where every millisecond counts.
 
