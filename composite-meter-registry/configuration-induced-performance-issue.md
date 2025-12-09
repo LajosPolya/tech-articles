@@ -85,7 +85,8 @@ As it turns out, `@ConditionalOnBean` should only be used on auto-configured con
 
 This iterator normally wouldn’t cause any issues, but the exchange produces hundreds of millions of metrics per minute, meaning hundreds of millions of iterator instantiations and `hasNext` executions.
 
-To fix the issue, I removed our redundant construction of `MeterRegistry`. After a restart, I could see that `PrometheusMeterRegistry` was now being injected into the application as expected! The `increment` method no longer contained a loop, saving an additional 0.6% of CPU cycles and reducing memory pressure as the application no longer needed to create iterators on each call to `increment`.
+To fix the issue, I removed our redundant construction of `MeterRegistry`. After a restart, I could see that `PrometheusMeterRegistry` was now being injected into the application as expected! The `increment` method no longer contained a loop, saving an additional 0.6% of CPU cycles and reducing memory pressure as the application no longer needed to create an iterator on each call to `increment`.
+A 0.6% performance hit may not seem significant, but in an environment where every millisecond matters, we'll take all that we can get. Not to mention, the operation was completely redundant and therefore, it had to be removed.
 
 In a nutshell, a small configuration error introduced an unnecessary operation that went unnoticed for 3 years, leading to many wasted CPU cycles. All that was needed to fix it was a bit of curiosity, a couple of hours of debugging, and the removal of 5 lines of code.
 
