@@ -12,7 +12,7 @@ I stepped through the flame chart and discovered that this wasn't even coming fr
 
 ![hasNext.png](attachments/hasNext.png)
 
-Next, I dove into the `CompositeMeterRegistry.increment` method to find out where `hasNext` was actually being called. In Java, the enhanced for loop is syntactic sugar for looping through a collection using its iterator’s `hasNext` and `next` methods. 
+Next, I dove into the `CompositeMeterRegistry.increment` method to find out where `hasNext` was actually being called. In Java, the enhanced for-loop is syntactic sugar for looping through a collection using its iterator’s `hasNext` and `next` methods. 
 
 ```java
 @Override
