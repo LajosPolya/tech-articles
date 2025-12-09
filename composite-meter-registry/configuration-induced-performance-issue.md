@@ -23,7 +23,7 @@ public void increment(double amount) {
 }
 ``` 
 
-To break down where `hasNext` was being called, I disassembled the class file into assembly. In short, `getChildren` returns `Map` (which is an `Iterable`), and the enhanced for loop implicitly calls `Iterator.hasNext` and `Iterator.next`.
+To break down where `hasNext` was called, I disassembled the class file into assembly. In short, `getChildren` returns `Map` (which is an `Iterable`), and the enhanced for-loop implicitly calls `Iterator.hasNext` and `Iterator.next`.
 
 ```
 public void increment(double);
