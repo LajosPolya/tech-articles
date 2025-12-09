@@ -4,7 +4,7 @@ A tale about how a seemingly benign \[mis]configuration resulted in wasted CPU c
 
 For the past two years, I’ve been working on an ad exchange written with the Java Spring Framework. It’s an incredible piece of software which transacts millions of auctions every second in an environment where every millisecond counts.
 
-My curiosity about the application’s performance took me down a path of deciphering Java Flight Recorder (JFR) files via JDK Mission Control, diving deep into memory hotspots and operations that hog CPU cycles.
+My curiosity about the application’s performance led me down a path of deciphering Java Flight Recorder (JFR) files via JDK Mission Control, diving deep into memory hotspots and operations that hog CPU cycles.
 
 While reviewing the list of our worst-performing methods, I noticed something curious. One method in particular, `IdentityHashMapIterator.hasNext`, was using about 0.6% of CPU cycles. This caught my attention because the exchange doesn’t ubiquitously use this specific implementation of `Map`.
 
@@ -12,7 +12,7 @@ I stepped through the flame chart and discovered that this wasn't even coming fr
 
 ![hasNext.png](attachments/hasNext.png)
 
-Next, I dove into the `CompositeMeterRegistry.increment` method to find out where `hasNext` was actually being called. In Java, the enhanced for-loop is syntactic sugar for traversing through a collection using its iterator’s `hasNext` and `next` methods. 
+Next, I dove into the `CompositeCounter.increment` method to determine where `hasNext` was actually being called. In Java, the enhanced for-loop is syntactic sugar for traversing through a collection using its iterator’s `hasNext` and `next` methods. 
 
 ```java
 @Override
@@ -48,7 +48,7 @@ public void increment(double);
 
 Zooming out a little further, why is `increment` called in a loop?
 
-Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When `CompositeMeterRegistry` creates a `Counter`, it creates a `CompositeCounter`, which stores its various registries in an `IdentityHashMap`. When `CompositeCounter.increment` is called, it loops through each `Counter` implementation and calls increment on each of them. What was unusual was that the `IdentityHashMap` only contained one element, `PrometheusMeterRegistry`. If it’s the only registry present at runtime, why isn’t it being injected directly?
+Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When `CompositeMeterRegistry` creates a `Counter`, it constructs a `CompositeCounter`, which stores its various registries in an `IdentityHashMap`. When `CompositeCounter.increment` is called, it loops through each `Counter` implementation and calls `increment` on each of them. What was unusual was that the `IdentityHashMap` only contained one element, `PrometheusMeterRegistry`. If it’s the only registry present at runtime, why isn’t it being injected directly?
 
 In our code, I found something that didn’t make any sense:
 
@@ -75,19 +75,19 @@ Let’s break down the sequence of events. Before continuing, I will assume the 
 
 1. `PrometheusMeterRegistry` implements `MeterRegistry`. Spring creates a bean of type `PrometheusMeterRegistry` and injects it into the `MeterConfig.meterManager` bean method
 2. A bean of type `MeterManager` is created
-3. If a bean of type `MeterRegistry` doesn’t exist, the existing bean of type `MeterRegistry` contained in `MeterManager` is returned. This is confusing because we already know that we have a bean of `MeterRegistry`. After all, `MeterManager` depends on it, making this completely redundant, but running the code confirms that this gets executed. Why?
+3. If a bean of type `MeterRegistry` doesn’t exist, the existing bean of type `MeterRegistry` contained in `MeterManager` is returned. This is confusing because we already know that we have a bean of type `MeterRegistry`. After all, `MeterManager` depends on it, making this completely redundant, but running the code confirms that this gets executed. Why?
 
-When `CompositeMeterRegistry` is created, it identifies beans that implement `MeterRegistry`. Through this search, `PrometheusMeterRegistry` is found in the Micrometer dependency, then the same instance is found in the `MeterConfig` configuration file. For some reason, the `@ConditionalOnMissingBean` annotation was being ignored. Why?
+When `CompositeMeterRegistry` is created, it identifies beans that implement `MeterRegistry`. Through this search, `PrometheusMeterRegistry` is found in the Micrometer dependency; subsequently, the same instance is found in the `MeterConfig` configuration file. For some reason, the `@ConditionalOnMissingBean` annotation was ignored. Why?
 
-As it turns out, `@ConditionalOnBean` should only be used on auto-configured configuration files or the condition may not be honoured. This is even stated in the [javadoc](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html).
+As it turns out, `@ConditionalOnBean` should only be used on auto-configured configuration files, or the condition may not be honoured. This is even stated in the [javadoc](https://docs.spring.io/spring-boot/api/java/org/springframework/boot/autoconfigure/condition/ConditionalOnMissingBean.html).
 
 > The condition can only match the bean definitions that have been processed by the application context so far and, as such, it is strongly recommended to use this condition on auto-configuration classes only. If a candidate bean may be created by another auto-configuration, make sure that the one using this condition runs after.
 
 This iterator normally wouldn’t cause any issues, but the exchange produces hundreds of millions of metrics per minute, meaning hundreds of millions of iterator instantiations and `hasNext` executions.
 
-To fix the issue, I removed our redundant construction of `MeterRegistry`. After a restart, I could see that `PrometheusMeterRegistry` was now being injected into the application as expected! The `increment` method no longer contained a loop, saving an additional 0.6% of CPU cycles and reducing memory pressure as the application no longer needed to create an iterator on each call to `increment`.
-A 0.6% performance hit may not seem significant, but in an environment where every millisecond matters, we'll take all that we can get. Not to mention, the operation was completely redundant and therefore, it had to be removed.
+To fix the issue, I removed our redundant construction of `MeterRegistry`. After a restart, I could see that `PrometheusMeterRegistry` was now injected into the application as expected. The `increment` method no longer contained a loop, saving an additional 0.6% of CPU cycles and reducing memory pressure as the application no longer needed to create an iterator on each call to `increment`.
+A 0.6% performance hit may not seem significant, but in an environment where every millisecond matters, we'll take all that we can get. Not to mention, the operation was completely redundant, and therefore, it had to be removed.
 
-In a nutshell, a small configuration error introduced an unnecessary operation that went unnoticed for 3 years, leading to many wasted CPU cycles. All that was needed to fix it was a bit of curiosity, a couple of hours of debugging, and the removal of 5 lines of code.
+In a nutshell, a minor configuration error introduced an unnecessary operation that went unnoticed for three years, resulting in numerous wasted CPU cycles. All that was needed to fix it was a bit of curiosity, a couple of hours of debugging, and the removal of 5 lines of code.
 
 - Szóbör Bober  
