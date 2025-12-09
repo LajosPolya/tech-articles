@@ -4,7 +4,7 @@ A tale about how a seemingly benign \[mis]configuration resulted in wasted CPU c
 
 For the past two years, I’ve been working on an ad exchange written with the Java Spring Framework. It’s an incredible piece of software which transacts millions of auctions every second in an environment where every millisecond counts.
 
-My curiosity about the application’s performance led me down a path of deciphering Java Flight Recorder (JFR) files via JDK Mission Control, diving deep into memory hotspots and operations that hog CPU cycles.
+My curiosity about the application’s performance led me down a path of deciphering Java Flight Recorder (JFR) files via JDK Mission Control, which allowed me to delve into memory hotspots and operations that hog CPU cycles.
 
 While reviewing the list of our worst-performing methods, I noticed something curious. One method in particular, `IdentityHashMapIterator.hasNext`, was using about 0.6% of CPU cycles. This caught my attention because the exchange doesn’t ubiquitously use this specific implementation of `Map`.
 
@@ -48,7 +48,7 @@ public void increment(double);
 
 Zooming out a little further, why is `increment` called in a loop?
 
-Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When `CompositeMeterRegistry` creates a `Counter`, it constructs a `CompositeCounter`, which stores its various registries in an `IdentityHashMap`. When `CompositeCounter.increment` is called, it loops through each `Counter` implementation and calls `increment` on each of them. What was unusual was that the `IdentityHashMap` only contained one element, `PrometheusMeterRegistry`. If it’s the only registry present at runtime, why isn’t it being injected directly?
+Spring should inject the `CompositeMeterRegistry` only if the application supports multiple implementations of `MeterRegistry`. When `CompositeMeterRegistry` creates a `Counter`, it constructs a `CompositeCounter`, which stores its various registries in an `IdentityHashMap`. When `CompositeCounter.increment` is called, it loops through each `Counter` implementation and calls `increment` on each of them. What was unusual was that the `IdentityHashMap` only contained one element, `PrometheusMeterRegistry`. If it were the only registry present at runtime, why wasn't it being injected directly? This could be answered by what I found next.
 
 In our code, I found something that didn’t make any sense:
 
