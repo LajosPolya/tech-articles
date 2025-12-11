@@ -31,3 +31,12 @@ One the exchange, we have thousands of metrics, with hundreds of millions of mea
 
 The tradeoff/balance between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the exchange, but this comes at a cost. Managing too many metrics can be detrimental to performance especially if we don't keep in mind the weight of each counter or metric operation.
 
+
+
+
+### Links
+
+* https://github.com/micrometer-metrics/micrometer/wiki/Performance:-criticality-of-code-paths
+* https://vertx.io/blog/micrometer-metrics-performance/
+* https://vertx.io/docs/vertx-micrometer-metrics/java/ \[haven't read]
+* https://docs.micrometer.io/micrometer/reference/concepts/meter-provider.html
