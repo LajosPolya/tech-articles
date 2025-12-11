@@ -1,5 +1,5 @@
 # Give the memory goblin a break! (Excessive memory consumption)
-
+(The performance impact of observability and how we can reduce its cost)
 
 The Memory Goblin works relentlessly/tirelessly to manage your computer’s memory. 
 
@@ -18,3 +18,12 @@ Not sure I like this: In true capitalist fashion, by reducing memory consumption
 
 
 The idea of a memory goblin was brought to me by my most influential high school teacher, Anthony Viola, over 15 years ago. He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly the article described memory management by a goblin managing drawers or shelves. I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT but they didn’t return any useful information.
+
+
+## A note on observability
+
+The observability of a system can directly be linked to its reliability. If you can't see and error then how can you fix it? If you can't see trends then how can you use them to your advantage?
+One the exchange, we have thousands of metrics, with hundreds of millions of measurements (data-points?).
+
+The tradeoff/balance between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the exchange, but this comes at a cost. Managing too many metrics can be detrimental to performance especially if we don't keep in mind the weight of each counter or metric operation.
+
