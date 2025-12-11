@@ -31,7 +31,16 @@ One the exchange, we have thousands of metrics, with hundreds of millions of mea
 
 The tradeoff/balance between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the exchange, but this comes at a cost. Managing too many metrics can be detrimental to performance especially if we don't keep in mind the weight of each counter or metric operation.
 
+Within the exchange, we use the Micrometer observability facade, the Prometheus flavour. Micrometer supports many types of metrics/measurements but most use the same interface so I'll stick to `Counter` for simplicity.
+At its simplest, `Counter` is, well, a counter. It keeps track of the number of times it was incremented.
+For example;
 
+```java
+// Do I have to explain what MeterRegistry is? Or can I just simply say "MeterRegistry is the factory used to create and store meters.
+MeterRegistry meterRegistry = new MeterRegistry();
+meterRegistry.counter("number_of_request").increment();
+```
+The code snippet above creates a counter and increments it. This operation is simple and relatively benign, but a lot is going on under the hood.
 
 
 ### Links
