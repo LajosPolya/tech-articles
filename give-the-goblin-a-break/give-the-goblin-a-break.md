@@ -1,5 +1,6 @@
 # Give the memory goblin a break! (Excessive memory consumption)
 (The performance impact of observability and how we can reduce its cost)
+The article dives into finding the balance between fine grained / high-resolution observability and its performance hit.
 
 The Memory Goblin works relentlessly/tirelessly to manage your computer’s memory. 
 
@@ -10,6 +11,9 @@ The Memory Goblin works relentlessly/tirelessly to manage your computer’s memo
 
 1. Items are never removed from the memory, instead, when memory becomes full, the Goblin uses the latest and greatest cache replacement policy/algorithm to choose an address where it can pack down its contained object and put a new object on top of it. When the computer runs out of memory, the goblin use the greatest and latest cache replacement policy/algorithm to choose an address to pack down and put a new object on top of it.
 2. The goblin lives in a massive wearhouse, managing an almost never ending wall of drawers. When room is plenty, the goblin stores your data as it pleases (or maybe have an analogy for LRU algorithm... stores your data next to where it left off). But when memory is full, it finds the least recently used memory blocks (or any other cache replacement policy/algorithm) and packs the old data down until it becomes dust and fill the drawer with the most recent data. (god forbid it go to the hard-drive)
+3. The goblin packs the memory (data?) down until it turn into dust, making room for new data \[storage]
+
+Memory isn't infinite but the drawers live on infinitely 
 
 This goblin works \[tirelessly, is this redundant since I said "without a break"] never stopping for a break, vacation, or even a pay raise. But if it works too hard it’ll eventually melt, so we must give it a break (reduce it's workload). But how?
 
