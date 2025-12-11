@@ -6,6 +6,8 @@ The Memory Goblin works relentlessly/tirelessly to manage your computer’s memo
 1. When you open a program, write a document, or watch a video; without even knowing it, the goblin is instructed to create all the necessary objects and places then at new addresses.
 2. When you open a program, write a document, or watch a video; in the background, the goblin within you machine is instructed to stream and store your data in memory.
 
+\[// maybe make the use of LRU more obvious to make the writing more concrete and less abstract?]
+
 1. Items are never removed from the memory, instead, when memory becomes full, the Goblin uses the latest and greatest cache replacement policy/algorithm to choose an address where it can pack down its contained object and put a new object on top of it. When the computer runs out of memory, the goblin use the greatest and latest cache replacement policy/algorithm to choose an address to pack down and put a new object on top of it.
 2. The goblin lives in a massive wearhouse, managing an almost never ending wall of drawers. When room is plenty, the goblin stores your data as it pleases (or maybe have an analogy for LRU algorithm... stores your data next to where it left off). But when memory is full, it finds the least recently used memory blocks (or any other cache replacement policy/algorithm) and packs the old data down until it becomes dust and fill the drawer with the most recent data. (god forbid it go to the hard-drive)
 
