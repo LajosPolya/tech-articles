@@ -14,7 +14,7 @@ The Memory Goblin works relentlessly/tirelessly to manage your computer’s memo
 This goblin works \[tirelessly, is this redundant since I said "without a break"] never stopping for a break, vacation, or even a pay raise. But if it works too hard it’ll eventually melt, so we must give it a break (reduce it's workload). But how?
 
 
-
+Not sure I like this: In true capitalist fashion, by reducing memory consumption we were able to increase ad request throughput, making the goblin more efficient, and working harder 
 
 
 The idea of a memory goblin was brought to me by my most influential high school teacher, Anthony Viola, over 15 years ago. He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly the article described memory management by a goblin managing drawers or shelves. I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT but they didn’t return any useful information.
