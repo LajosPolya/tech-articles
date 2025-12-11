@@ -1,4 +1,4 @@
-# Give the memory goblin a break!
+# Give the memory goblin a break! (Excessive memory consumption)
 
 
 The Memory Goblin works relentlessly/tirelessly to manage your computer’s memory. 
