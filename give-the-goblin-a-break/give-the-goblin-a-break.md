@@ -65,6 +65,8 @@ Some of our counters may be created hundreds of millions of times every minute, 
 
 ### Efficient patterns for using meters
 
+#### A simple counter
+
 I've already showed the most simple way to create a counter.
 
 ```java
@@ -95,6 +97,52 @@ public class AdRequestService {
 ```
 
 The code above is much more efficient than the previous example because the counter is only created once, releasing memory pressure.
+
+#### Counters with fixed tags
+
+Another common pattern is to use a set of fixed tags. I'm simplifying the rest of the examples by removing the initialization of `MeterRegistry`.
+
+
+```java
+public fetch() {
+    // make ad request
+    boolean success = makeRequest();
+    
+    if(success) {
+        meterRegistry.counter("number_of_request", Tags.of("status", "success")).increment();
+    } else {
+        meterRegistry.counter("number_of_request", Tags.of("status", "failed")).increment();
+    }
+}
+```
+The above example allows us to filter on `status`, so we get a count of the number of successful vs failed ad requests.
+
+
+```java
+public class AdRequestService {
+    
+    private final Counter numberOfSuccessfulAdRequest;
+    private final Counter numberOfFailedAdRequest;
+    
+    public AdRequestService(MeterRegistry meterRegistry) {
+        this.numberOfSuccessfulAdRequest = meterRegistry.counter("number_of_request", Tags.of("status", "success"));
+        this.numberOfFailedAdRequest = meterRegistry.counter("number_of_request", Tags.of("status", "failed"));
+    }
+    
+    public fetch() {
+        // make ad request
+        boolean success = makeRequest();
+
+        if(success) {
+            numberOfSuccessfulAdRequest.increment();
+        } else {
+            numberOfFailedAdRequest.increment();
+        }
+    }
+}
+```
+
+#### Counters with enum tags
 
 ### Links
 
