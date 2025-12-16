@@ -31,17 +31,70 @@ One the exchange, we have thousands of metrics, with hundreds of millions of mea
 
 The tradeoff/balance between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the exchange, but this comes at a cost. Managing too many metrics can be detrimental to performance especially if we don't keep in mind the weight of each counter or metric operation.
 
+
+## Micrometer 
 Within the exchange, we use the Micrometer observability facade, the Prometheus flavour. Micrometer supports many types of metrics/measurements but most use the same interface so I'll stick to `Counter` for simplicity.
 At its simplest, `Counter` is, well, a counter. It keeps track of the number of times it was incremented.
 For example;
 
 ```java
 // Do I have to explain what MeterRegistry is? Or can I just simply say "MeterRegistry is the factory used to create and store meters.
-MeterRegistry meterRegistry = new MeterRegistry();
-meterRegistry.counter("number_of_request").increment();
+/**
+ * A Service used to make an ad request. A Counter is initialized every time a request is made to keep count of the 
+ * number of requests made. As you can imagine, this can be quite inefficient.
+ */
+public class AdRequestService {
+
+    private final MeterRegistry meterRegistry;
+
+    public AdRequestService(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
+
+    public fetch() {
+        // contains code to make an ad request
+
+        meterRegistry.counter("number_of_request").increment();
+    }
+}
 ```
 The code snippet above creates a counter and increments it. This operation is simple and relatively benign, but a lot is going on under the hood.
+For every counter, or any other type of meter, Micrometer must create an object to hold all the tags, then the tags must be sorted. Then a `builder` object is built to hold the meter's name and tags.
+Then in order to register the meter, and ID must be constructed and stored in a map. This single counter has the potential to create a tremendous amount of memory pressure if it created often enough. 
+Some of our counters may be created hundreds of millions of times every minute, accounting for about ~3% of total memory usage, which is huge considering most of this memory pressure could be easily removed, giving the Garbage Collector (GC) a break.
 
+### Efficient patterns for using meters
+
+I've already showed the most simple way to create a counter.
+
+```java
+meterRegistry.counter("number_of_request").increment();
+```
+As said above, this line of code can be quite inefficient when called a large number of times. To mitigate the creation of copious amount of memory, create the counter once and increment a reference to it.
+
+
+```java
+/**
+ * A Service used to make an ad request. A Counter is initialized once in the constructor and a reference to it is re-used
+ * to keep count of the number of requests made.
+ */
+public class AdRequestService {
+    
+    private final Counter numberOfAdRequest;
+    
+    public AdRequestService(MeterRegistry meterRegistry) {
+        this.numberOfAdRequest = meterRegistry.counter("number_of_request");
+    }
+    
+    public fetch() {
+        // contains code to make an ad request
+        
+        numberOfAdRequest.increment();
+    }
+}
+```
+
+The code above is much more efficient than the previous example because the counter is only created once, releasing memory pressure.
 
 ### Links
 
