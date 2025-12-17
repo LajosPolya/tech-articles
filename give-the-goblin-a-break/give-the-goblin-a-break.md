@@ -2,7 +2,7 @@
 (The performance impact of observability and how we can reduce its cost)
 The article dives into finding the balance between fine grained / high-resolution observability and its performance hit.
 
-The Memory Goblin works relentlessly/tirelessly to manage your computer’s memory. 
+Deep inside your computer lives a small creature called the Memory Goblin. It works relentlessly/tirelessly within your hardware to manage your computer’s memory. 
 
 1. When you open a program, write a document, or watch a video; without even knowing it, the goblin is instructed to create all the necessary objects and places then at new addresses.
 2. When you open a program, write a document, or watch a video; in the background, the goblin within you machine is instructed to stream and store your data in memory.
