@@ -149,26 +149,28 @@ public class AdRequestService {
 ### JMH
 
 ```
-Benchmark                                  Mode  Cnt    Score   Error  Units
-JMHSample_03_States.measureShared          avgt    5   49.784 ± 3.977  ns/op
-JMHSample_03_States.measureSharedCreate    avgt    5  178.361 ± 1.538  ns/op
-JMHSample_03_States.measureUnshared        avgt    5   50.473 ± 0.229  ns/op
-JMHSample_03_States.measureUnsharedCreate  avgt    5  179.979 ± 5.793  ns/op
-
-
+Throughput (64 Threads) (Score = ops/ns over the 64 threads)
 Benchmark                                   Mode  Cnt  Score   Error   Units
 JMHSample_03_States.measureShared          thrpt    5  1.168 ± 0.178  ops/ns
 JMHSample_03_States.measureSharedCreate    thrpt    5  0.360 ± 0.003  ops/ns
 JMHSample_03_States.measureUnshared        thrpt    5  1.247 ± 0.049  ops/ns
 JMHSample_03_States.measureUnsharedCreate  thrpt    5  0.362 ± 0.006  ops/ns
 
+Average Time (64 Threads)
+Benchmark                                  Mode  Cnt    Score   Error  Units
+JMHSample_03_States.measureShared          avgt    5   49.784 ± 3.977  ns/op
+JMHSample_03_States.measureSharedCreate    avgt    5  178.361 ± 1.538  ns/op
+JMHSample_03_States.measureUnshared        avgt    5   50.473 ± 0.229  ns/op
+JMHSample_03_States.measureUnsharedCreate  avgt    5  179.979 ± 5.793  ns/op
 
+Throughput (1 Thread)
 Benchmark                                   Mode  Cnt  Score   Error   Units
 JMHSample_03_States.measureShared          thrpt    5  0.117 ± 0.005  ops/ns
 JMHSample_03_States.measureSharedCreate    thrpt    5  0.077 ± 0.003  ops/ns
 JMHSample_03_States.measureUnshared        thrpt    5  0.117 ± 0.002  ops/ns
 JMHSample_03_States.measureUnsharedCreate  thrpt    5  0.076 ± 0.003  ops/ns
 
+Average Time (1 Thread)
 Benchmark                                  Mode  Cnt   Score   Error  Units
 JMHSample_03_States.measureShared          avgt    5   8.575 ± 0.154  ns/op
 JMHSample_03_States.measureSharedCreate    avgt    5  13.624 ± 0.589  ns/op
