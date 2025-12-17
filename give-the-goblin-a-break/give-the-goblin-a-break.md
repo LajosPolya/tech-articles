@@ -144,6 +144,43 @@ public class AdRequestService {
 
 #### Counters with enum tags
 
+```java
+public class SimpleCounter {
+
+    private final MeterRegistry meterRegistry;
+    private final Counter counter;
+    private final Map<EnumState, Counter> counters;
+
+    public SimpleCounter() {
+        meterRegistry = new SimpleMeterRegistry();
+        counter = meterRegistry.counter("counter");
+        counters = getCounters();
+    }
+
+    private Map<EnumState, Counter> getCounters() {
+        Map<EnumState, Counter> tempCounters = new EnumMap<>(EnumState.class);
+        for(EnumState state : EnumState.values()){
+            tempCounters.put(state, counter);
+        }
+        return tempCounters;
+    }
+
+    public void createAndIncrement(EnumState state) {
+        meterRegistry.counter("counter", "state", state.name()).increment();
+    }
+
+    public void increment(EnumState state) {
+        counters.get(state).increment();
+    }
+
+    public enum State {
+        SENT,
+        RECEIVED,
+        REQUEST_NOT_RECEIVED,
+        RESPONSE_NOT_RECEIVED,
+    }
+}
+```
 
 
 ### JMH
