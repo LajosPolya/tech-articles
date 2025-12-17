@@ -193,34 +193,18 @@ public class SimpleCounter {
 
 ### JMH
 
+Using JDK Mission Control, in production, I was able to calculate savings of about ~2% of memory. But in order to calculate CPU usage, I decided to setup a JMH test harness.
+
 ```
-Throughput (64 Threads) (Score = ops/ns over the 64 threads)
-Benchmark                                   Mode  Cnt  Score   Error   Units
-JMHSample_03_States.measureShared          thrpt    5  1.168 ± 0.178  ops/ns
-JMHSample_03_States.measureSharedCreate    thrpt    5  0.360 ± 0.003  ops/ns
-JMHSample_03_States.measureUnshared        thrpt    5  1.247 ± 0.049  ops/ns
-JMHSample_03_States.measureUnsharedCreate  thrpt    5  0.362 ± 0.006  ops/ns
-
-Average Time (64 Threads)
-Benchmark                                  Mode  Cnt    Score   Error  Units
-JMHSample_03_States.measureShared          avgt    5   49.784 ± 3.977  ns/op
-JMHSample_03_States.measureSharedCreate    avgt    5  178.361 ± 1.538  ns/op
-JMHSample_03_States.measureUnshared        avgt    5   50.473 ± 0.229  ns/op
-JMHSample_03_States.measureUnsharedCreate  avgt    5  179.979 ± 5.793  ns/op
-
-Throughput (1 Thread)
-Benchmark                                   Mode  Cnt  Score   Error   Units
-JMHSample_03_States.measureShared          thrpt    5  0.117 ± 0.005  ops/ns
-JMHSample_03_States.measureSharedCreate    thrpt    5  0.077 ± 0.003  ops/ns
-JMHSample_03_States.measureUnshared        thrpt    5  0.117 ± 0.002  ops/ns
-JMHSample_03_States.measureUnsharedCreate  thrpt    5  0.076 ± 0.003  ops/ns
-
-Average Time (1 Thread)
-Benchmark                                  Mode  Cnt   Score   Error  Units
-JMHSample_03_States.measureShared          avgt    5   8.575 ± 0.154  ns/op
-JMHSample_03_States.measureSharedCreate    avgt    5  13.624 ± 0.589  ns/op
-JMHSample_03_States.measureUnshared        avgt    5   8.604 ± 0.202  ns/op
-JMHSample_03_States.measureUnsharedCreate  avgt    5  13.158 ± 0.430  ns/op
+Benchmark                                      Mode  Cnt         Score         Error  Units
+JMHSample_03_States.measureShared              avgt    5         9.387 ±       0.931  ns/op
+JMHSample_03_States.measureSharedCreate        avgt    5        13.414 ±       1.899  ns/op
+JMHSample_03_States.measureSharedCreateEnum    avgt    5  29577438.730 ± 2495721.829  ns/op
+JMHSample_03_States.measureSharedEnum          avgt    5   5933216.139 ±  443411.755  ns/op
+JMHSample_03_States.measureUnshared            avgt    5         8.757 ±       1.166  ns/op
+JMHSample_03_States.measureUnsharedCreate      avgt    5        13.354 ±       0.803  ns/op
+JMHSample_03_States.measureUnsharedCreateEnum  avgt    5  30121077.236 ± 6096476.216  ns/op
+JMHSample_03_States.measureUnsharedEnum        avgt    5   6040832.152 ±  198174.826  ns/op
 ```
 
 ### Links
