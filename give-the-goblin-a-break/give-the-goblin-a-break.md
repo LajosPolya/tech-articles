@@ -145,28 +145,36 @@ public class AdRequestService {
 #### Counters with enum tags
 
 ```java
+public void increment(State state) {
+    meterRegistry.counter("counter", "state", state.name()).increment();
+}
+
+public enum State {
+    SENT,
+    RECEIVED,
+    REQUEST_NOT_RECEIVED,
+    RESPONSE_NOT_RECEIVED,
+}
+```
+
+```java
 public class SimpleCounter {
 
     private final MeterRegistry meterRegistry;
-    private final Counter counter;
     private final Map<EnumState, Counter> counters;
 
-    public SimpleCounter() {
-        meterRegistry = new SimpleMeterRegistry();
-        counter = meterRegistry.counter("counter");
+    public SimpleCounter(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
         counters = getCounters();
     }
 
     private Map<EnumState, Counter> getCounters() {
+        // note that we're using an EnumMap
         Map<EnumState, Counter> tempCounters = new EnumMap<>(EnumState.class);
         for(EnumState state : EnumState.values()){
-            tempCounters.put(state, counter);
+            tempCounters.put(state, meterRegistry.counter("counter", "state", state.name()));
         }
         return tempCounters;
-    }
-
-    public void createAndIncrement(EnumState state) {
-        meterRegistry.counter("counter", "state", state.name()).increment();
     }
 
     public void increment(EnumState state) {
