@@ -203,28 +203,28 @@ Tagged counters contain one tag, created like this; `meterRegistry.counter("coun
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
 So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmark only increments one counter.
 
-| Benchmark (1 thread)                                   | Mode | Cnt | Score        | Error         | Units |
-|--------------------------------------------------------|------|-----|--------------|---------------|-------|
-| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   | 12.656       | ±       0.354 | ns/op |
-| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   | 8.078        | ±       0.161 | ns/op |
-| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   | 27357777.939 | ± 1053230.354 | ns/op |
-| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   | 5719102.557  | ±   19151.749 | ns/op |
-| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   | 6421308.149  | ±   24017.314 | ns/op |
+| Benchmark (1 thread)                                   | Mode | Cnt |         Score |          Error | Units |
+|--------------------------------------------------------|------|-----|--------------:|---------------:|-------|
+| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   |        12.656 |  ±       0.354 | ns/op |
+| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   |         8.078 |  ±       0.161 | ns/op |
+| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   |  27357777.939 |  ± 1053230.354 | ns/op |
+| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   |   5719102.557 |  ±   19151.749 | ns/op |
+| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
 
 #### Untagged Counters
 It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs when it's not.
 
 #### Tagged Counters
 It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when it's not cached.
-What's surprising is that using a `HashMap` was only marginally slower than compared to an `EnumMap`
+What's surprising is that using a `HashMap` is only about 18% slower than using an `EnumMap`.
 
-| Benchmark (64 threads)                                 | Mode | Cnt | Score          | Error         | Units |
-|--------------------------------------------------------|------|-----|----------------|---------------|-------|
-| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   | 177.100        | ±      23.376 | ns/op |
-| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   | 46.078         | ±       1.516 | ns/op |
-| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   | 496434854.701  | ± 5020725.765 | ns/op |
-| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   | 75517031.385   | ± 2542030.000 | ns/op |
-| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   | 93097015.965   | ± 2702539.877 | ns/op |
+| Benchmark (64 threads)                                 | Mode | Cnt |          Score |          Error | Units |
+|--------------------------------------------------------|------|-----|---------------:|---------------:|-------|
+| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   |        177.100 |  ±      23.376 | ns/op |
+| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   |         46.078 |  ±       1.516 | ns/op |
+| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   |  496434854.701 |  ± 5020725.765 | ns/op |
+| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   |   75517031.385 |  ± 2542030.000 | ns/op |
+| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   |   93097015.965 |  ± 2702539.877 | ns/op |
 
 The results are similar when testing with 64 threads.
 
