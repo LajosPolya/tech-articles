@@ -16,22 +16,32 @@ The idea of a memory goblin was brought to me by my most influential high school
 
 ## A note on observability
 
-The observability of a system can directly be linked to its reliability. If you can't see and error then how can you fix it? If you can't see trends then how can you use them to your advantage?
-One the exchange, we have thousands of metrics, with hundreds of millions of measurements (data-points?).
+For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software which transacts millions of auctions every second in an environment where every millisecond counts.
 
-The tradeoff/balance between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the exchange, but this comes at a cost. Managing too many metrics can be detrimental to performance especially if we don't keep in mind the weight of each counter or metric operation.
+The observability of a system can be directly linked to its reliability. If you can't see and error then how can you fix it? If you can't see trends then how can you use them to your advantage?
+On the exchange, we have thousands of metrics, with hundreds of millions of measurements. We use these measurements to track error rates, ad spend, response times, number of messages produced, number of bids, etc.
+Each metric plays an important role in observing the health of the exchange. For example, a sharp increate in the error rate of an operation can bring to light a bug. An increase in response times can hint to infrastructure scaling issues.
+But metrics aren't free.
+The tradeoff between performance and observability is delicate. The more data we have, the better we can make inference about state/health of the application, but this comes at a cost. 
+Managing too many metrics can be detrimental to performance especially if the weight of recording a metric is not considered.
 
 
 ## Micrometer 
-Within the exchange, we use the Micrometer observability facade, the Prometheus flavour. Micrometer supports many types of metrics/measurements but most use the same interface so I'll stick to `Counter` for simplicity.
-At its simplest, `Counter` is, well, a counter. It keeps track of the number of times it was incremented.
+Within the exchange, we use the Micrometer observability facade, the Prometheus flavour.
+Micrometer supports many types of meters; counters, gauges, timers, and distribution summaries. For simplicity, I'll use counters since they're used most often and are the simplest to understand.
+
+At its simplest, `Counter` is, well, a counter. It keeps the count of "something".
+
+Before continuing the reason must understand a couple of things.
+1. `MeterRegistry` is the interface provided by Micrometer to produce meters, such as a counter.
+2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity we're going to assume the same happens here.
+
 For example;
 
 ```java
-// Do I have to explain what MeterRegistry is? Or can I just simply say "MeterRegistry is the factory used to create and store meters.
 /**
- * A Service used to make an ad request. A Counter is initialized every time a request is made to keep count of the 
- * number of requests made. As you can imagine, this can be quite inefficient.
+ * A service, responsible for making an ad request. A {@link io.micrometer.core.instrument.Counter} is initialized every
+ * time a request is made to keep count of the number of requests made. As you can imagine, this can be quite inefficient.
  */
 public class AdRequestService {
 
@@ -49,20 +59,24 @@ public class AdRequestService {
 }
 ```
 The code snippet above creates a counter and increments it. This operation is simple and relatively benign, but a lot is going on under the hood.
-For every counter, or any other type of meter, Micrometer must create an object to hold all the tags, then the tags must be sorted. Then a `builder` object is built to hold the meter's name and tags.
-Then in order to register the meter, and ID must be constructed and stored in a map. This single counter has the potential to create a tremendous amount of memory pressure if it created often enough. 
-Some of our counters may be created hundreds of millions of times every minute, accounting for about ~3% of total memory usage, which is huge considering most of this memory pressure could be easily removed, giving the Garbage Collector (GC) a break.
+Every time a counter is initialized in this way, Micrometer creates an object to sort and store all the counter's tags. Then a `builder` object is built to hold the meter's name and tags.
+Then in order to register the counter, an ID is constructed and used as a key to store the counter in a map. 
+This single counter has the potential to create a tremendous amount of memory pressure if it created often enough. 
+Some of the exchange's counters are created hundreds of millions of times per minute, accounting for about 3% of total memory usage. This is huge considering most of this memory pressure could be easily removed, giving the Garbage Collector (GC) a break.
 
 ### Efficient patterns for using meters
 
+In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, reducing memory usage by 2%.
+The rest of the article described the patterns I used to create counters efficiently to reduce CPU and memory usage.
+
 #### A simple counter
 
-I've already showed the most simple way to create a counter.
+I already showed the most simple way to create a counter.
 
 ```java
 meterRegistry.counter("number_of_request").increment();
 ```
-As said above, this line of code can be quite inefficient when called a large number of times. To mitigate the creation of copious amount of memory, create the counter once and increment a reference to it.
+As mentioned above, this line of code can be quite inefficient when called a large number of times. To mitigate the creation of copious amounts of memory, create the counter once, store a reference to it in an instance variable, and use that refence when incrementing the counter.
 
 
 ```java
