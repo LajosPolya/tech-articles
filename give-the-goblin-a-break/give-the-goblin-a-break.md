@@ -201,7 +201,7 @@ I'm going to break down the single threaded benchmarks into two categories; "tag
 Tagless counters are the simplest example of a counter, created like this; `meterRegistry.counter("counter")`, see, no tags.
 Tagged counters contain one tag, created like this; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
-So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmark only increments one counter.
+So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter.
 
 | Benchmark (1 thread)                                   | Mode | Cnt |         Score |          Error | Units |
 |--------------------------------------------------------|------|-----|--------------:|---------------:|-------|
@@ -228,9 +228,10 @@ What's surprising is that using a `HashMap` is only about 18% slower than using 
 
 The results are similar when testing with 64 threads.
 
-### Links
+### Relevant links
 
+* https://github.com/LajosPolya/Micrometer-Performance
+* https://github.com/LajosPolya/JMH-Test
 * https://github.com/micrometer-metrics/micrometer/wiki/Performance:-criticality-of-code-paths
 * https://vertx.io/blog/micrometer-metrics-performance/
-* https://vertx.io/docs/vertx-micrometer-metrics/java/ \[haven't read]
 * https://docs.micrometer.io/micrometer/reference/concepts/meter-provider.html
