@@ -216,7 +216,7 @@ It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs 
 
 #### Tagged Counters
 It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when it's not cached.
-What's surprising is that using a `HashMap` is only about 18% slower than using an `EnumMap`.
+What's surprising is that using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 | Benchmark (64 threads)                                 | Mode | Cnt |          Score |          Error | Units |
 |--------------------------------------------------------|------|-----|---------------:|---------------:|-------|
