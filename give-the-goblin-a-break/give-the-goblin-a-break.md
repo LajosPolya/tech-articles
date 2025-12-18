@@ -32,18 +32,18 @@ Micrometer supports many types of meters; counters, gauges, timers, and distribu
 
 At its simplest, `Counter` is, well, a counter. It keeps the count of "something".
 
-Before continuing the reason must understand a couple of things.
-1. `MeterRegistry` is the interface provided by Micrometer to produce meters, such as a counter.
+Before continuing the reader must understand a couple of things.
+1. `MeterRegistry` is the interface provided by Micrometer to produce and store meters, such as a counter.
 2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity we're going to assume the same happens here.
 
-For example;
+For example, the class below makes a request to an ad server. The way it makes the request is not important. What's important is how it keeps track of the number of requests made.
 
 ```java
 /**
  * A service, responsible for making an ad request. A {@link io.micrometer.core.instrument.Counter} is initialized every
  * time a request is made to keep count of the number of requests made. As you can imagine, this can be quite inefficient.
  */
-public class AdRequestService {
+public abstract class AdRequestService {
 
     private final MeterRegistry meterRegistry;
 
@@ -51,10 +51,15 @@ public class AdRequestService {
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * Makes a request via makeRequest. A counter is initialized everytime a request is made.
+     */
     public fetch() {
         makeRequest();
         meterRegistry.counter("number_of_request").increment();
     }
+    
+    protected abstract void makeRequest();
 }
 ```
 The code snippet above creates a counter and increments it. This operation is simple and relatively benign, but a lot is going on under the hood.
@@ -63,10 +68,10 @@ Then in order to register the counter, an ID is constructed and used as a key to
 This single counter has the potential to create a tremendous amount of memory pressure if it created often enough. 
 Some of the exchange's counters are created hundreds of millions of times per minute, accounting for about 3% of total memory usage. This is huge considering most of this memory pressure could be easily removed, giving the Garbage Collector (GC) a break.
 
-### Efficient patterns for using meters
+### Efficient patterns for creating meters
 
-In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, reducing memory usage by 2%.
-The rest of the article described the patterns I used to create counters efficiently to reduce CPU and memory usage.
+In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, deleting 2% of redundant memory.
+The rest of the article describes the patterns I used to create counters efficiently to reduce CPU and memory usage.
 
 #### A simple counter
 
@@ -83,7 +88,7 @@ As mentioned above, this line of code can be quite inefficient when called a lar
  * A Service used to make an ad request. A Counter is initialized once in the constructor and a reference to it is re-used
  * to keep count of the number of requests made.
  */
-public class AdRequestService {
+public abstract class AdRequestService {
     
     private final Counter numberOfAdRequest;
     
@@ -95,6 +100,8 @@ public class AdRequestService {
         makeRequest();
         numberOfAdRequest.increment();
     }
+
+    protected abstract void makeRequest();
 }
 ```
 
@@ -123,7 +130,7 @@ public enum PayloadState {
 ```
 
 ```java
-public class SimpleCounter {
+public abstract class SimpleCounter {
 
     private final MeterRegistry meterRegistry;
     private final Map<PayloadState, Counter> counters;
@@ -155,6 +162,8 @@ public class SimpleCounter {
         counters.get(state).increment();
     }
 
+    protected abstract void makeRequest();
+
     public enum PayloadState {
         REQUEST_SENT,
         RESPONSE_RECEIVED,
@@ -165,9 +174,9 @@ public class SimpleCounter {
 ```
 
 
-### JMH
+### Performance testing with Java Microbenchmark Harness (JMH)
 
-Using JDK Mission Control, in production, I was able to calculate savings of about ~2% of memory. But in order to calculate CPU usage, I decided to setup a JMH test harness.
+JMH is a JVM tool which allows performance testing applications with nanosecond accuracy.
 
 ```
 Benchmark                                      Mode  Cnt         Score         Error  Units
