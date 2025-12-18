@@ -49,7 +49,7 @@ Some of the exchange's counters are created hundreds of millions of times per mi
 
 ### Efficient patterns for creating meters
 
-In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, freeing 2% of memory for more important operations.
+In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, freeing 2% of memory for more important operations. I used Java Flight Recorder (JFR) and JDK Mission Control to calculate memory use estimations.
 The rest of the article describes the patterns I used to create counters efficiently, reducing CPU and memory usage.
 
 #### A simple counter
