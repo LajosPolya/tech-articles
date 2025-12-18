@@ -179,6 +179,13 @@ JMHSample_03_States.measureUnshared            avgt    5         8.757 ±       
 JMHSample_03_States.measureUnsharedCreate      avgt    5        13.354 ±       0.803  ns/op
 JMHSample_03_States.measureUnsharedCreateEnum  avgt    5  30121077.236 ± 6096476.216  ns/op
 JMHSample_03_States.measureUnsharedEnum        avgt    5   6040832.152 ±  198174.826  ns/op
+
+Benchmark                                    Mode  Cnt         Score         Error  Units
+JMHSample_03_States.measureShared            avgt    5         9.436 ±       0.381  ns/op
+JMHSample_03_States.measureSharedCreate      avgt    5        13.204 ±       0.866  ns/op
+JMHSample_03_States.measureSharedCreateEnum  avgt    5  29122200.699 ± 3221381.765  ns/op
+JMHSample_03_States.measureSharedEnum        avgt    5   6029552.214 ±   25069.843  ns/op
+JMHSample_03_States.measureSharedHash        avgt    5   6458398.304 ±   62635.835  ns/op
 ```
 
 ### Links
