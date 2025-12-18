@@ -173,29 +173,51 @@ public abstract class SimpleCounter {
 }
 ```
 
-
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
 JMH is a JVM tool which allows performance testing applications with nanosecond accuracy.
+I created two projects to test various ways of creating and caching counters to check how performant each option is.
+The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains the code to be tested.
+The [second project](https://github.com/LajosPolya/JMH-Test) contains the JMH testing harness.
+JMH recommends this two project setup to ensure that the benchmarks are correctly initialized and produce reliable results.
+I tested five options, these benchmarks are synonymous with the examples above, with the addition of one bonus test.
 
-```
-Benchmark                                      Mode  Cnt         Score         Error  Units
-JMHSample_03_States.measureShared              avgt    5         9.387 ±       0.931  ns/op
-JMHSample_03_States.measureSharedCreate        avgt    5        13.414 ±       1.899  ns/op
-JMHSample_03_States.measureSharedCreateEnum    avgt    5  29577438.730 ± 2495721.829  ns/op
-JMHSample_03_States.measureSharedEnum          avgt    5   5933216.139 ±  443411.755  ns/op
-JMHSample_03_States.measureUnshared            avgt    5         8.757 ±       1.166  ns/op
-JMHSample_03_States.measureUnsharedCreate      avgt    5        13.354 ±       0.803  ns/op
-JMHSample_03_States.measureUnsharedCreateEnum  avgt    5  30121077.236 ± 6096476.216  ns/op
-JMHSample_03_States.measureUnsharedEnum        avgt    5   6040832.152 ±  198174.826  ns/op
+1. Using Micrometer to create a counter every time it is incremented
+2. Creating a counter once, storing a reference to it, and using that reference to increment the counter.
+3. Using Micrometer to create a counter with a tag every time it is incremented
+4. Creating a counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. 
+5. Creating a counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter.
 
-Benchmark                                    Mode  Cnt         Score         Error  Units
-JMHSample_03_States.measureShared            avgt    5         9.436 ±       0.381  ns/op
-JMHSample_03_States.measureSharedCreate      avgt    5        13.204 ±       0.866  ns/op
-JMHSample_03_States.measureSharedCreateEnum  avgt    5  29122200.699 ± 3221381.765  ns/op
-JMHSample_03_States.measureSharedEnum        avgt    5   6029552.214 ±   25069.843  ns/op
-JMHSample_03_States.measureSharedHash        avgt    5   6458398.304 ±   62635.835  ns/op
-```
+I'm going to break down the single threaded benchmarks into two categories; "tagless" and "tagged".
+Tagless counters are the simplest example of a counter, created like this; `meterRegistry.counter("counter")`, see, no tags.
+Tagged counter contain one tag, created like this; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
+The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
+So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmark only increments one counter.
+
+| Benchmark (1 thread)                                   | Mode | Cnt | Score        | Error         | Units |
+|--------------------------------------------------------|------|-----|--------------|---------------|-------|
+| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   | 12.656       | ±       0.354 | ns/op |
+| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   | 8.078        | ±       0.161 | ns/op |
+| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   | 27357777.939 | ± 1053230.354 | ns/op |
+| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   | 5719102.557  | ±   19151.749 | ns/op |
+| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   | 6421308.149  | ±   24017.314 | ns/op |
+
+#### Untagged Counters
+It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs when it's not.
+
+#### Tagged Counters
+It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when it's not cached.
+What's surpising is that the `HashMap` was only marginally slower than the `EnumMap`
+
+| Benchmark (64 threads)                                 | Mode | Cnt | Score          | Error         | Units |
+|--------------------------------------------------------|------|-----|----------------|---------------|-------|
+| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   | 177.100        | ±      23.376 | ns/op |
+| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   | 46.078         | ±       1.516 | ns/op |
+| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   | 496434854.701  | ± 5020725.765 | ns/op |
+| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   | 75517031.385   | ± 2542030.000 | ns/op |
+| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   | 93097015.965   | ± 2702539.877 | ns/op |
+
+The results are similar when testing with 64 threads.
 
 ### Links
 
