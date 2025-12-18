@@ -1,60 +1,60 @@
 # Give the memory goblin a break! (Excessive memory consumption)
-This article dives into reducing the performance impact of observability measurements by evaluating its cost on memory and CPU.
+This article explores reducing the performance impact of observability measurements by evaluating their cost in terms of memory and CPU usage.
 
 Deep inside your computer lives a small creature called the Memory Goblin. It works tirelessly within your hardware to manage your computer’s memory. 
-When you open a program, write a document, or watch a video; in the background, the goblin within your machine, streams and saves data in memory.
+When you open a program, write a document, or watch a video, the goblin within your machine organizes and saves data in memory in the background.
 
 Memory is designed as a vast matrix of drawers, a large cabinet. Each drawer represents one byte of data.
-When every drawer is empty, the goblin inserts data starting at the first drawer, and continues sequentially, until every byte of data is stored away.
-When every drawer contains an item, the goblin opens the least recently used drawer. Instead of removing the old data, the goblin compresses it down with the new data until the former turns into dust, and voilà, the drawer only contains the new the data.
-This goblin works relentlessly, never stopping for a break, vacation, or even a pay raise. But if it works too hard it’ll eventually overheat, so we must give it a break.
+When every drawer is empty, the goblin inserts data starting at the first drawer and continues sequentially until every byte of data is stored away.
+When every drawer contains an item, the goblin opens the least recently used drawer. Instead of removing the old data, the goblin compresses it down with the new data until the former turns into dust, and voilà, the drawer only contains the new data.
+This goblin works relentlessly, never stopping for a break, vacation, or even a pay raise. But if it works too hard, it’ll eventually overheat, so we must give it a break.
 
 The idea of a memory goblin was brought to me by my most influential high school teacher, Anthony Viola, over 15 years ago. 
 He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly, the article described memory management as a goblin managing drawers or shelves.
-I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT but they didn’t return any useful information.
+I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT, but they didn’t return any useful information.
 
 
 ## A note on observability
 
-For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software which transacts millions of auctions every second in an environment where every millisecond counts.
+For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software that transacts millions of auctions every second in an environment where every millisecond counts.
 
-The observability of a system can be directly linked to its reliability. If you can't see and error then how can you fix it? If you can't see trends then how can you use them to your advantage?
-On the exchange, we have thousands of metrics, with hundreds of millions of measurements. We use these measurements to track error rates, ad spend, response times, number of bids, etc.
-Each metric plays an important role in observing the overall health of the exchange. For example, a sharp increase in the error rate of an operation can bring to light a bug. An increase in response times can hint to infrastructure scaling issues.
+The observability of a system can be directly linked to its reliability. If you can't see an error, then how can you fix it? If trends are made visible to you, then how can you use them to your advantage?
+On the exchange, we have thousands of metrics, with hundreds of millions of measurements. We use these measurements to track error rates, ad spend, response times, the number of bids, and other key metrics.
+Each metric plays an important role in revealing the overall health of the exchange. For example, a sharp increase in the error rate of an operation can expose an otherwise hidden bug. An increase in response times can hint at infrastructure scaling issues.
 But metrics aren't free.
-The tradeoff between performance and observability is delicate. The more data we have, the better we can infer about state of the application, but this comes at a cost. 
-Managing too many metrics can be detrimental to performance especially if the weight of recording a metric is not considered.
+There is a delicate tradeoff between performance and observability. The more data we have, the better we can infer about the state of the application, but this comes at a cost. 
+Managing too many metrics can be detrimental to performance, especially if the weight of recording a metric is not considered.
 
 
 ## Micrometer 
 Within the exchange, we use the Micrometer observability facade, the Prometheus flavour.
-Micrometer supports many types of *meters*; counters, gauges, timers, and distribution summaries. For simplicity, I'll use counters since they're used most often and are the simplest to understand.
+Micrometer supports the following types of *meters*: counters, gauges, timers, and distribution summaries. For simplicity, I'll use counters since they're used most often and are the simplest to understand.
 
 At its simplest, a `Counter` is, well, a counter. It keeps count of "something".
 
-Before continuing the reader must understand a couple of things.
+Before continuing, the reader must understand a couple of things.
 1. `MeterRegistry` is the interface provided by Micrometer to produce and store meters, such as a counter.
-2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity we're going to assume the same happens here.
+2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity, we're going to assume the same happens here.
 
 Let's look at a simplified example:
 
 ```java
 meterRegistry.counter("number_of_request").increment();
 ```
-The code snippet above creates a counter and increments it. This operation looks simple and benign, but can be insidious in nature because a lot is going on under the hood.
+The code snippet above creates a counter and increments it. This operation may appear simple and benign, but it can be insidious in nature because a lot is happening the hood.
 Every time a counter is *initialized in this way*, Micrometer creates an object to sort and store all the counter's tags (This example doesn't contain tags). Then a `builder` object is instantiated to hold the meter's name and tags.
-Then in order to register the counter, an ID is constructed and used as a key to store the counter in a map. 
-This single counter has the potential to create a tremendous amount of memory pressure if it created often enough.
-Some of the exchange's counters are created hundreds of millions of times per minute, accounting for about 3% of total memory usage. This is huge considering most of this memory pressure could be easily removed, giving the Garbage Collector (GC) a break.
+Then, to register the counter, an ID is constructed and used as a key to store the counter in a map. 
+This single counter has the potential to create a tremendous amount of memory pressure if it is created often enough.
+Some of the exchange's counters are created hundreds of millions of times per minute, accounting for about 3% of total memory usage. This is unacceptable, considering most of this memory could be easily removed, giving the Garbage Collector (GC) a break.
 
 ### Efficient patterns for creating meters
 
-In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, deleting 2% of redundant memory.
-The rest of the article describes the patterns I used to create counters efficiently to reduce CPU and memory usage.
+In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, freeing 2% of memory for more important operations.
+The rest of the article describes the patterns I used to create counters efficiently, reducing CPU and memory usage.
 
 #### A simple counter
 
-I already showed the most simple way to create a counter. The code example below will expand on this to a full working example.
+I already showed the simplest way to create a counter. The code example below will expand on this to a full working example.
 The class below makes a request to an ad server. The way in which it makes the request is not important. What's important is how it keeps track of the number of requests made.
 
 ```java
