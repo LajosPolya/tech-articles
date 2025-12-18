@@ -52,8 +52,7 @@ public class AdRequestService {
     }
 
     public fetch() {
-        // contains code to make an ad request
-
+        makeRequest();
         meterRegistry.counter("number_of_request").increment();
     }
 }
@@ -93,8 +92,7 @@ public class AdRequestService {
     }
     
     public fetch() {
-        // contains code to make an ad request
-        
+        makeRequest();
         numberOfAdRequest.increment();
     }
 }
@@ -104,15 +102,22 @@ The code above is much more efficient than the previous example because the coun
 
 #### Counters with enum tags
 
+Counters using Enum tags offer a great way to keep track of a finite set of non-nullable states.
+
 ```java
-public void increment(State state) {
-    meterRegistry.counter("counter", "state", state.name()).increment();
+/**
+ * Makes a request and keeps track the number of requests in each possible state. An attempt to recreate the counter
+ * is made with every request.
+ */
+public void fetch() {
+    PayloadState state = makeRequest();
+    meterRegistry.counter("number_of_request", "state", state.name()).increment();
 }
 
-public enum State {
-    SENT,
-    RECEIVED,
-    REQUEST_NOT_RECEIVED,
+public enum PayloadState {
+    REQUEST_SENT,
+    RESPONSE_RECEIVED,
+    REQUEST_FAILED_TO_SEND,
     RESPONSE_NOT_RECEIVED,
 }
 ```
@@ -121,30 +126,39 @@ public enum State {
 public class SimpleCounter {
 
     private final MeterRegistry meterRegistry;
-    private final Map<EnumState, Counter> counters;
+    private final Map<PayloadState, Counter> counters;
 
     public SimpleCounter(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
         counters = getCounters();
     }
 
-    private Map<EnumState, Counter> getCounters() {
+    /**
+     * Upon construction, a instance of {@link Counter} is created for each possible state. These counters are stored in 
+     * an {@link EnumMap} for fast retrieval.
+     */
+    private Map<PayloadState, Counter> getCounters() {
         // note that we're using an EnumMap
-        Map<EnumState, Counter> tempCounters = new EnumMap<>(EnumState.class);
-        for(EnumState state : EnumState.values()){
-            tempCounters.put(state, meterRegistry.counter("counter", "state", state.name()));
+        Map<PayloadState, Counter> tempCounters = new EnumMap<>(PayloadState.class);
+        for(PayloadState state : PayloadState.values()){
+            tempCounters.put(state, meterRegistry.counter("number_of_request", "state", state.name()));
         }
         return tempCounters;
     }
 
-    public void increment(EnumState state) {
+    /**
+     * Makes a request and keeps track the number of requests in each possible state. An existing counter is fetched
+     * from the cache (map) to prevent the creation of the counter with each request.
+     */
+    public void fetch() {
+        PayloadState state = makeRequest();
         counters.get(state).increment();
     }
 
-    public enum State {
-        SENT,
-        RECEIVED,
-        REQUEST_NOT_RECEIVED,
+    public enum PayloadState {
+        REQUEST_SENT,
+        RESPONSE_RECEIVED,
+        REQUEST_FAILED_TO_SEND,
         RESPONSE_NOT_RECEIVED,
     }
 }
