@@ -203,9 +203,9 @@ These superfluous objects are short-lived so they won't cause to out-of-memory e
 
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
-JMH is a JVM tool which allows performance testing applications with nanosecond accuracy.
+JMH is a JVM tool specializing in performance testing applications with nanosecond accuracy.
 I created two projects to test various ways of creating and caching counters to check how performant each option is.
-The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains the code to be tested.
+The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
 The [second project](https://github.com/LajosPolya/JMH-Test) contains the JMH testing harness.
 JMH recommends this two project approach to ensure that the benchmarks are correctly initialized and produce reliable results.
 I tested five options, these benchmarks are synonymous with the examples above, with the addition of one bonus test.
@@ -216,7 +216,7 @@ I tested five options, these benchmarks are synonymous with the examples above, 
 4. Creating a counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. 
 5. Creating a counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter.
 
-I'm going to break down the single threaded benchmarks into two categories; "tagless" and "tagged".
+The single threaded benchmarks are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter, created like this; `meterRegistry.counter("counter")`, see, no tags.
 Tagged counters contain one tag, created like this; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
