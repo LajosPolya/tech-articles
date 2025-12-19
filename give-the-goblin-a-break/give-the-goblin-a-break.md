@@ -189,15 +189,17 @@ public abstract class AdRequestService {
 As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
 To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
 
-| Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Class              |         Second Memory Intensive Class |            Second Memory Intensive Class |
-|------------------------------------------------------------------|-------------------------:|:-----------------------------------------|--------------------------------------:|-----------------------------------------:|
-| Uncached counter with zero tags                                  |                   18.095 | `byte[]`                                 |                                       |                                          |
-| Cached counter with zero tags                                    |               80,019.728 | `io.micrometer.core.instrument.Meter$Id` |                                       |                                          |
-| Uncached counter with one randomly chosen `enum` tag             |             223,974.0419 | `io.micrometer.core.instrument.Tags`     | `io.micrometer.core.instrument.Tag[]` | `io.micrometer.core.instrument.Meter$id` |
-| Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | `String`                                 |                                       |                                          |
-| Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | `byte[]`                                 |                                       |                                          |
+| Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
+|------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
+| Uncached counter with zero tags                                  |                   18.095 | unmeasurable                             |
+| Cached counter with zero tags                                    |               80,019.728 | `Meter$Id`                               |
+| Uncached counter with one randomly chosen `enum` tag             |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
+| Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | unmeasurable                             |
+| Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | unmeasurable                             |
 
-// explain differences, add links to classes
+Every example which cached its counters used about ~18MiB of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
+A counter with zero tags utilized ~80GiB of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to ~224GiB of memory because the creation on each counter introduced the creation of `Tags` and `Tag[]`.
+These superfluous objects are short-lived so they won't cause to out-of-memory error, but they can trigger excessive GC usage which can hinder the application's performance. 
 
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
