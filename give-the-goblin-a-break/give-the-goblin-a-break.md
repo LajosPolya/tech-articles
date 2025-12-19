@@ -56,13 +56,13 @@ The rest of the article describes the patterns used to create counters efficient
 
 #### A simple counter
 
-I already showed the simplest way to create a counter. The code example below will expand on this to a full working example.
+I already showed the simplest way to create a counter. The code example below will expand on this to display a full working example.
 The class below makes a request to an ad server. The way in which it makes the request is not important. What's important is how it keeps track of the number of requests made.
 
 ```java
 /**
- * A service, responsible for making an ad request. A {@link io.micrometer.core.instrument.Counter} is initialized every
- * time a request is made to keep count of the number of requests made. As you can imagine, this can be quite inefficient.
+ * A service, responsible for making an ad request. A Counter is initialized every time a request is made to keep count
+ * of the number of requests made. As you can imagine, this can be quite inefficient.
  */
 public abstract class AdRequestService {
 
@@ -83,21 +83,21 @@ public abstract class AdRequestService {
     protected abstract void makeRequest();
 }
 ```
-As mentioned above, this line of code can be quite inefficient when called a large number of times because the amount of memory used by Micrometer is directly proportional to the number of times the counter is incremented.
-To mitigate the creation of copious amounts of memory, create the counter once, store a reference to it in an instance variable, and use that refence when incrementing the counter.
 
+As mentioned above, this code can be quite inefficient when called repeatedly because the amount of memory used by Micrometer is directly proportional to the number of times the counter is incremented.
+To mitigate wasting copious amounts of memory, create the counter once, store a reference to it in an instance variable, and use that refence when incrementing the counter.
 
 ```java
 /**
- * A Service used to make an ad request. A Counter is initialized once in the constructor and a reference to it is re-used
- * to keep count of the number of requests made.
+ * A service, responsible for making an ad request. A Counter is initialized once in the constructor and a reference to
+ * it is re-used to keep count of the number of requests made.
  */
 public abstract class AdRequestService {
-    
-    private final Counter numberOfAdRequest;
-    
+
+    private final Counter numberOfAdRequests;
+
     public AdRequestService(MeterRegistry meterRegistry) {
-        this.numberOfAdRequest = meterRegistry.counter("number_of_request");
+        this.numberOfAdRequest = meterRegistry.counter("number_of_requests");
     }
 
     /**
@@ -117,7 +117,7 @@ The code above is much more efficient than the previous example because the coun
 
 #### Counters with Enum tags
 
-Counters using Enum tags offer a great way to keep track of a finite set of states.
+Counters using `enum` tags offer a great way to keep track of a finite set of states, but introduce additional memory pressure through the creation and storage of tags.
 
 ```java
 /**
@@ -126,7 +126,7 @@ Counters using Enum tags offer a great way to keep track of a finite set of stat
  */
 public void fetch() {
     PayloadState state = makeRequest();
-    meterRegistry.counter("number_of_request", "state", state.name()).increment();
+    meterRegistry.counter("number_of_requests", "state", state.name()).increment();
 }
 
 private enum PayloadState {
@@ -138,7 +138,7 @@ private enum PayloadState {
 ```
 
 To prevent re-initializing a counter for each request. Create a counter for each possible `PayloadState` and cache the results in an `EnumMap`.
-An `EnumMap` is an implementation of `Map` specifically used for `Enum` keys. Since every possible key is known, it stores values in an array make insertion and retrieval much faster.
+An `EnumMap` is an implementation of `Map` specifically used for `Enum` keys. Since every possible key is known, it stores values in an array, making insertion and retrieval faster than the traditional `HashMap`.
 
 ```java
 public abstract class AdRequestService {
@@ -152,13 +152,13 @@ public abstract class AdRequestService {
     }
 
     /**
-     * Upon construction, a instance of {@link Counter} is created for each possible state. These counters are stored in 
-     * an {@link EnumMap} for fast retrieval.
+     * Upon construction, a instance of Counter is created for each possible state. These counters are stored in an 
+     * EnumMap for fast retrieval.
      */
     private Map<PayloadState, Counter> getCounters() {
         Map<PayloadState, Counter> tempCounters = new EnumMap<>(PayloadState.class);
         for(PayloadState state : PayloadState.values()){
-            tempCounters.put(state, meterRegistry.counter("number_of_request", "state", state.name()));
+            tempCounters.put(state, meterRegistry.counter("number_of_requests", "state", state.name()));
         }
         return tempCounters;
     }
@@ -186,8 +186,8 @@ public abstract class AdRequestService {
 
 ### Performance testing with Java Flight Recorder (JFR)
 
-As mentioned above, in production, in the exchange, I was able to verify that the exchange's memory consumption relating to Micrometer was reduced by 2%.
-To take this testing one step further, I set up a testing framework to test the memory consumption of an application which increments a counter 2<sup>32</sup> times.
+As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
+To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
 
 | Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Class              |         Second Memory Intensive Class |            Second Memory Intensive Class |
 |------------------------------------------------------------------|-------------------------:|:-----------------------------------------|--------------------------------------:|-----------------------------------------:|
