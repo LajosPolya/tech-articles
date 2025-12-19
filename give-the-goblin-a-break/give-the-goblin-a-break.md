@@ -199,7 +199,7 @@ To take this testing one step further, I set up a testing framework to test the 
 
 Every example which cached its counters used about ~18MiB of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
 A counter with zero tags utilized ~80GiB of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to ~224GiB of memory because the creation on each counter introduced the creation of `Tags` and `Tag[]`.
-These superfluous objects are short-lived so they won't cause to out-of-memory error, but they can trigger excessive GC usage which can hinder the application's performance. 
+These superfluous objects are short-lived so they won't cause to out-of-memory errors, but they can trigger excessive GC usage which can hinder the application's performance. 
 
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
