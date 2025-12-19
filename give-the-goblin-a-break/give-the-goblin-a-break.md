@@ -184,26 +184,8 @@ public abstract class AdRequestService {
 }
 ```
 
-### Performance testing with Java Flight Recorder (JFR)
+## Performance Testing
 
-As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
-To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
-
-| Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
-|------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
-| Uncached counter with zero tags                                  |                   18.095 | unmeasurable                             |
-| Cached counter with zero tags                                    |               80,019.728 | `Meter$Id`                               |
-| Uncached counter with one randomly chosen `enum` tag             |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
-| Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | unmeasurable                             |
-| Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | unmeasurable                             |
-
-Every example which cached its counters used about ~18MiB of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
-A counter with zero tags utilized ~80GiB of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to ~224GiB of memory because the creation on each counter introduced the creation of `Tags` and `Tag[]`.
-These superfluous objects are short-lived so they won't cause to out-of-memory errors, but they can trigger excessive GC usage which can hinder the application's performance. 
-
-### Performance testing with Java Microbenchmark Harness (JMH)
-
-JMH is a JVM tool specializing in performance testing applications with nanosecond accuracy.
 I created two projects to test various ways of creating and caching counters to check how performant each option is.
 The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
 The [second project](https://github.com/LajosPolya/JMH-Test) contains the JMH testing harness.
@@ -212,9 +194,33 @@ I tested five options, these benchmarks are synonymous with the examples above, 
 
 1. Using Micrometer to create a counter every time it is incremented
 2. Creating a counter once, storing a reference to it, and using that reference to increment the counter.
-3. Using Micrometer to create a counter with a tag every time it is incremented
-4. Creating a counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. 
-5. Creating a counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter.
+3. Using Micrometer to create a counter with one tag every time it is incremented
+4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter.
+5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter.
+
+### Performance testing with Java Flight Recorder (JFR)
+
+JFR is a tool that runs alongside an application while recording low-level metrics about it, such as, memory usage and CPU profiling.  
+
+As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
+To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
+
+| Benchmark                                                           | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
+|---------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
+| 1. Uncached counter with zero tags                                  |                   18.095 | unmeasurable                             |
+| 2. Cached counter with zero tags                                    |               80,019.728 | `Meter$Id`                               |
+| 3. Uncached counter with one randomly chosen `enum` tag             |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
+| 4. Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | unmeasurable                             |
+| 5. Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | unmeasurable                             |
+
+Every example which cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
+A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
+These superfluous objects are short-lived so they won't cause to out-of-memory errors, but they can trigger excessive GC usage which can hinder the application's performance.
+There is one caveat, this test is not at all indicative of how an application runs in the real world but it does exemplify the level of waste introduced when performance is not considered. 
+
+### Performance testing with Java Microbenchmark Harness (JMH)
+
+JMH is a JVM tool specializing in performance testing applications where nanosecond accuracy is a necessary.
 
 The single threaded benchmarks are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter, created like this; `meterRegistry.counter("counter")`, see, no tags.
@@ -222,13 +228,13 @@ Tagged counters contain one tag, created like this; `meterRegistry.counter("coun
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
 So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter.
 
-| Benchmark (1 thread)                                   | Mode | Cnt |         Score |          Error | Units |
-|--------------------------------------------------------|------|-----|--------------:|---------------:|-------|
-| MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   |        12.656 |  ±       0.354 | ns/op |
-| MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   |         8.078 |  ±       0.161 | ns/op |
-| MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   |  27357777.939 |  ± 1053230.354 | ns/op |
-| MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   |   5719102.557 |  ±   19151.749 | ns/op |
-| MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
+| Benchmark (1 thread)                                      | Mode | Cnt |         Score |          Error | Units |
+|-----------------------------------------------------------|------|-----|--------------:|---------------:|-------|
+| 1. MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   |        12.656 |  ±       0.354 | ns/op |
+| 2. MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   |         8.078 |  ±       0.161 | ns/op |
+| 3. MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   |  27357777.939 |  ± 1053230.354 | ns/op |
+| 4. MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   |   5719102.557 |  ±   19151.749 | ns/op |
+| 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
 
 #### Untagged Counters
 It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs when it's not.
