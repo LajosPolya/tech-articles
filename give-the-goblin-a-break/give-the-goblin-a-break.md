@@ -182,6 +182,21 @@ public abstract class AdRequestService {
 }
 ```
 
+### Performance testing with Java Flight Recorder (JFR)
+
+As mentioned above, in production, in the exchange, I was able to verify that the exchange's memory consumption relating to Micrometer was reduced by 2%.
+To take this testing one step further, I set up a testing framework to test the memory consumption of an application which increments a counter 2<sup>32</sup> times.
+
+| Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Class              |         Second Memory Intensive Class |            Second Memory Intensive Class |
+|------------------------------------------------------------------|-------------------------:|:-----------------------------------------|--------------------------------------:|-----------------------------------------:|
+| Uncached counter with zero tags                                  |                   18.095 | `io.micrometer.core.instrument.Meter$Id` |                                       |                                          |
+| Cached counter with zero tags                                    |               80,019.728 | `byte[]`                                 |                                       |                                          |
+| Uncached counter with one randomly chosen `enum` tag             |             223,974.0419 | `io.micrometer.core.instrument.Tags`     | `io.micrometer.core.instrument.Tag[]` | `io.micrometer.core.instrument.Meter$id` |
+| Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | `String`                                 |                                       |                                          |
+| Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | `byte[]`                                 |                                       |                                          |
+
+// explain differences
+
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
 JMH is a JVM tool which allows performance testing applications with nanosecond accuracy.
