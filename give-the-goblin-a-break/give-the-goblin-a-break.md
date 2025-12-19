@@ -13,7 +13,6 @@ The idea of a memory goblin was brought to me by my most influential high school
 He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly, the article described memory management as a goblin managing drawers or shelves.
 I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT, but they didn’t return any useful information.
 
-
 ## A note on observability
 
 For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software that transacts millions of auctions every second in an environment where every millisecond counts.
@@ -24,7 +23,6 @@ Each metric plays an important role in revealing the overall health of the excha
 But metrics aren't free.
 There is a delicate tradeoff between performance and observability. Having more observation data can lead to better conclusions about the state of the application, but this comes at a cost.
 Managing too many metrics can be detrimental to performance, especially if the weight of recording a measurement is not considered.
-
 
 ## Micrometer 
 The exchange employs the Micrometer observability facade as its observability engine, the Prometheus flavour.
@@ -44,15 +42,17 @@ meterRegistry.counter("number_of_request").increment();
 ```
 
 The code snippet above creates a counter and increments it. This operation may appear simple and benign, but it can be insidious in nature because a lot is happening the hood.
-Every time a counter is *initialized in this way*, Micrometer creates an object to sort and store all the counter's tags (This example doesn't contain tags). Then a `builder` object is instantiated to hold the meter's name and tags.
-Then, to register the counter, an ID is constructed and used as a key to store the counter in a map. 
-This single counter has the potential to create a tremendous amount of memory pressure if it is created often enough.
-Some of the exchange's counters are created hundreds of millions of times per minute, accounting for about 3% of total memory usage. This is unacceptable, considering most of this memory could be easily removed, giving the Garbage Collector (GC) a break.
+Every time a counter is *initialized in this way*, Micrometer constructs multiple holding objects that contain the counter's name, ID, and tags (this example doesn't contain tags).
+After initialization, Micrometer attempts to register the counter if it hasn't already done so.
+This construction of this single counter has the potential to create a tremendous amount of memory pressure if it is created repeatedly.
+Counters that track the most frequently occurring events within the exchange are created hundreds of millions of times per minute, accounting for about 3% of total memory usage.
+This is unacceptable, considering most of this memory could be easily removed by rethinking when and how counters are created, giving the Garbage Collector (GC) a break.
 
 ### Efficient patterns for creating meters
 
-In the exchange, I was able to reduce Micrometer's total memory usage from 3% to 1%, freeing 2% of memory for more important operations. I used Java Flight Recorder (JFR) and JDK Mission Control to calculate memory use estimations.
-The rest of the article describes the patterns I used to create counters efficiently, reducing CPU and memory usage.
+By rethinking the exchange's approach to counter management, the amount of memory used by Micrometer was reduced from occupying 3% of application memory to only 1%, freeing 2% of memory for more important operations. 
+Tools such as Java Flight Recorder (JFR) and JDK Mission Control were used to calculate memory usage estimations.
+The rest of the article describes the patterns used to create counters efficiently, reducing CPU and memory usage.
 
 #### A simple counter
 
