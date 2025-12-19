@@ -19,28 +19,30 @@ I don’t remember the article’s title, the publisher, or the author. I tried 
 For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software that transacts millions of auctions every second in an environment where every millisecond counts.
 
 The observability of a system can be directly linked to its reliability. If you can't see an error, then how can you fix it? If trends are made visible to you, then how can you use them to your advantage?
-On the exchange, we have thousands of metrics, with hundreds of millions of measurements. We use these measurements to track error rates, ad spend, response times, the number of bids, and other key metrics.
-Each metric plays an important role in revealing the overall health of the exchange. For example, a sharp increase in the error rate of an operation can expose an otherwise hidden bug. An increase in response times can hint at infrastructure scaling issues.
+Within the lifetime of an exchange deployment, thousands of metrics are registered, each having billions of measurements. These measurements are used to track error rates, ad spend, response times, the number of bids, and other key metrics.
+Each metric plays an important role in revealing the overall health of the exchange. For example, a sharp increase in the error rate of an operation can expose an otherwise hidden bug. An increase in the response time of an API can hint at infrastructure scaling issues.
 But metrics aren't free.
-There is a delicate tradeoff between performance and observability. The more data we have, the better we can infer about the state of the application, but this comes at a cost. 
-Managing too many metrics can be detrimental to performance, especially if the weight of recording a metric is not considered.
+There is a delicate tradeoff between performance and observability. Having more observation data can lead to better conclusions about the state of the application, but this comes at a cost.
+Managing too many metrics can be detrimental to performance, especially if the weight of recording a measurement is not considered.
 
 
 ## Micrometer 
-Within the exchange, we use the Micrometer observability facade, the Prometheus flavour.
-Micrometer supports the following types of *meters*: counters, gauges, timers, and distribution summaries. For simplicity, I'll use counters since they're used most often and are the simplest to understand.
+The exchange employs the Micrometer observability facade as its observability engine, the Prometheus flavour.
+Micrometer supports the following types of *meters*: counters, gauges, timers, and distribution summaries. Going forward, the examples only use counters since they're used most often and are the simplest to understand.
 
-At its simplest, a `Counter` is, well, a counter. It keeps count of "something".
+At its simplest, a `Counter` is, well, a counter. It keeps count of the number of times an event occurs.
 
-Before continuing, the reader must understand a couple of things.
-1. `MeterRegistry` is the interface provided by Micrometer to produce and store meters, such as a counter.
-2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity, we're going to assume the same happens here.
+Before continuing, the reader must understand a few definitions and pitfalls of the following examples.
+1. `MeterRegistry` is the interface provided by Micrometer to produce and manage the application's meters, such as its counter.
+2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity, assume the same happens here.
+3. The example code is incomplete, but the complete code for each example will be linked via GitHub. 
 
-Let's look at a simplified example:
+Here's a simplified example of how an instance of `MeterRegistry` is used to create and increment a counter:
 
 ```java
 meterRegistry.counter("number_of_request").increment();
 ```
+
 The code snippet above creates a counter and increments it. This operation may appear simple and benign, but it can be insidious in nature because a lot is happening the hood.
 Every time a counter is *initialized in this way*, Micrometer creates an object to sort and store all the counter's tags (This example doesn't contain tags). Then a `builder` object is instantiated to hold the meter's name and tags.
 Then, to register the counter, an ID is constructed and used as a key to store the counter in a map. 
@@ -195,7 +197,7 @@ To take this testing one step further, I set up a testing framework to test the 
 | Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | `String`                                 |                                       |                                          |
 | Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | `byte[]`                                 |                                       |                                          |
 
-// explain differences
+// explain differences, add links to classes
 
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
