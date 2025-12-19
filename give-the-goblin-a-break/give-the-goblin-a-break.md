@@ -189,8 +189,8 @@ To take this testing one step further, I set up a testing framework to test the 
 
 | Benchmark                                                        | Total Memory Usage (MiB) | Most Memory Intensive Class              |         Second Memory Intensive Class |            Second Memory Intensive Class |
 |------------------------------------------------------------------|-------------------------:|:-----------------------------------------|--------------------------------------:|-----------------------------------------:|
-| Uncached counter with zero tags                                  |                   18.095 | `io.micrometer.core.instrument.Meter$Id` |                                       |                                          |
-| Cached counter with zero tags                                    |               80,019.728 | `byte[]`                                 |                                       |                                          |
+| Uncached counter with zero tags                                  |                   18.095 | `byte[]`                                 |                                       |                                          |
+| Cached counter with zero tags                                    |               80,019.728 | `io.micrometer.core.instrument.Meter$Id` |                                       |                                          |
 | Uncached counter with one randomly chosen `enum` tag             |             223,974.0419 | `io.micrometer.core.instrument.Tags`     | `io.micrometer.core.instrument.Tag[]` | `io.micrometer.core.instrument.Meter$id` |
 | Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | `String`                                 |                                       |                                          |
 | Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | `byte[]`                                 |                                       |                                          |
