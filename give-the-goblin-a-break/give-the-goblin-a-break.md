@@ -206,13 +206,13 @@ JFR is a tool that runs alongside an application while recording low-level metri
 As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
 To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
 
-| Benchmark                                                                                  | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
-|--------------------------------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
-| 1. Uncached counter with zero tags :black_circle:                                          |                   18.095 | unmeasurable                             |
-| 2. Cached counter with zero tags :white_circle:                                            |               80,019.728 | `Meter$Id`                               |
-| 3. Uncached counter with one randomly chosen `enum` tag :red_circle:                       |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
-| 4. Counter cahched in `EnumMap` with one randomly chosen `enum` tag :large_blue_circle:    |                   17.687 | unmeasurable                             |
-| 5. Counter cahched in `HashMap` with one randomly chosen `enum` tag :large_orange_diamond: |                   18.183 | unmeasurable                             |
+| Benchmark                                                                                                                                                                                                                     | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
+|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
+| 1. [Uncached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainReinstantiateTagless.java) :black_circle:                                         |                   18.095 | unmeasurable                             |
+| 2. [Cached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheTagless.java) :white_circle:                                                   |               80,019.728 | `Meter$Id`                               |
+| 3. [Uncached counter with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainReinstantiateTagged.java) :red_circle:                       |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
+| 4. [Counter cahched in `EnumMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheEnumMapTagless.java) :large_blue_circle:    |                   17.687 | unmeasurable                             |
+| 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                   18.183 | unmeasurable                             |
 
 Every example which cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
 A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
@@ -223,7 +223,7 @@ There is one caveat, this test is not at all indicative of how an application ru
 
 JMH is a JVM tool specializing in performance testing applications where nanosecond accuracy is a necessary.
 
-The single threaded benchmarks are broken down into two categories; "tagless" and "tagged".
+The single threaded [benchmarks](https://github.com/LajosPolya/JMH-Test/blob/main/src/main/java/com/github/lajospolya/MicrometerCounterBenchmark.java) are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter, created like this; `meterRegistry.counter("counter")`, see, no tags.
 Tagged counters contain one tag, created like this; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
