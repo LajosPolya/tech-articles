@@ -1,8 +1,8 @@
 # Give the memory goblin a break! (Excessive memory consumption)
 This article explores reducing the performance impact of observability measurements by evaluating their cost in terms of memory and CPU usage.
 
-Deep inside your computer lives a small creature called the Memory Goblin. It works tirelessly within your hardware to manage your computer’s memory. 
-When you open a program, write a document, or watch a video, the goblin within your machine organizes and saves data in memory in the background.
+Deep inside your computer lives a nano-creature by name of Memory Goblin. It works tirelessly within your hardware to manage your computer’s memory. 
+When you boot an application, write a document, or watch a video, the goblin within your machine organizes and saves data in memory.
 
 Memory is designed as a vast matrix of drawers, a large cabinet. Each drawer represents one byte of data.
 When every drawer is empty, the goblin inserts data starting at the first drawer and continues sequentially until every byte of data is stored away.
@@ -10,15 +10,14 @@ When every drawer contains an item, the goblin opens the least recently used dra
 This goblin works relentlessly, never stopping for a break, vacation, or even a pay raise. But if it works too hard, it’ll eventually breakdown, so we must give it a break.
 
 ## A note on observability
-
 For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software that transacts millions of auctions every second in an environment where every millisecond counts.
 
-The observability of a system can be directly linked to its reliability. If you can't see an error, then how can you fix it? If trends are made visible to you, then how can you use them to your advantage?
-Within the lifetime of an exchange deployment, thousands of metrics are registered, each having billions of measurements. These measurements are used to track error rates, ad spend, response times, the number of bids, and other key metrics.
+The observability of a system can be directly linked to its reliability. If an error can't be seen, then how can it be fixed? If trends aren't visible, then how can they be used to gain an advantage?
+Within the lifetime of an exchange deployment (a few days), thousands of metrics are registered, each having trillions of measurements. These measurements are used to track error rates, ad spend, response times, the number of bids, and other key metrics.
 Each metric plays an important role in revealing the overall health of the exchange. For example, a sharp increase in the error rate of an operation can expose an otherwise hidden bug. An increase in the response time of an API can hint at infrastructure scaling issues.
 But metrics aren't free.
 There is a delicate tradeoff between performance and observability. Having more observation data can lead to better conclusions about the state of the application, but this comes at a cost.
-Managing too many metrics can be detrimental to performance, especially if the weight of recording a measurement is not considered.
+Managing excessive metrics can be detrimental to performance, especially if the weight of recording a measurement is not considered.
 
 ## Micrometer 
 The exchange employs the Micrometer observability facade as its observability engine, the Prometheus flavour.
@@ -27,7 +26,7 @@ Micrometer supports the following types of *meters*: counters, gauges, timers, a
 At its simplest, a `Counter` is, well, a counter. It keeps count of the number of times an event occurs.
 
 Before continuing, the reader must understand a few definitions and pitfalls of the following examples.
-1. `MeterRegistry` is the interface provided by Micrometer to produce and manage the application's meters, such as its counter.
+1. `MeterRegistry` is the interface provided by Micrometer to produce and manage the application's meters, such as its counters.
 2. In most modern applications, an instance of `MeterRegistry` is injected into the application, and for simplicity, assume the same happens here.
 3. The example code is incomplete, but the complete code for each example will be linked via GitHub. 
 
@@ -37,25 +36,25 @@ Here's a simplified example of how an instance of `MeterRegistry` is used to cre
 meterRegistry.counter("number_of_request").increment();
 ```
 
-The code snippet above creates a counter and increments it. This operation may appear simple and benign, but it can be insidious in nature because a lot is happening the hood.
+The code snippet creates a counter and increments it. This operation may appear simple and benign, but it can be insidious in nature because a lot is happening the hood.
 Every time a counter is *initialized in this way*, Micrometer constructs multiple holding objects that contain the counter's name, ID, and tags (this example doesn't contain tags).
 After initialization, Micrometer attempts to register the counter if it hasn't already done so.
-This construction of this single counter has the potential to create a tremendous amount of memory pressure if it is created repeatedly.
+The construction of this single counter has the potential to create a tremendous amount of memory pressure if it is created repeatedly.
 Counters that track the most frequently occurring events within the exchange are created hundreds of millions of times per minute, accounting for about 3% of total memory usage.
 This is unacceptable, considering most of this memory could be easily removed by rethinking when and how counters are created, giving the Garbage Collector (GC) a break.
 
 ### Efficient patterns for creating meters
 
-By rethinking the exchange's approach to counter management, the amount of memory used by Micrometer was reduced from occupying 3% of application memory to only 1%, freeing 2% of memory for more important operations. 
+By rethinking the exchange's approach to counter management, the amount of memory used by Micrometer was reduced from occupying 3% of application memory to only 1%, freeing 2% of memory for other important operations. 
 Tools such as Java Flight Recorder (JFR) and JDK Mission Control were used to calculate memory usage estimations.
 The rest of the article describes the patterns used to create counters efficiently, reducing CPU and memory usage.
 
 #### A simple counter
 
-I already showed the simplest way to create a counter. The code example below will expand on this to display a full working example.
+The simplest way to create a counter has already been shown. The next code example will expand on this to display a more complete example.
 The class below makes a request to an ad server. The way in which it makes the request is not important. What's important is how it keeps track of the number of requests made.
 
-F
+[Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/ReinstantiatedTaglessCounter.java)
 ```java
 /**
  * A service, responsible for making an ad request. A Counter is initialized every time a request is made to keep count
@@ -81,9 +80,10 @@ public abstract class AdRequestService {
 }
 ```
 
-As mentioned above, this code can be quite inefficient when called repeatedly because the amount of memory used by Micrometer is directly proportional to the number of times the counter is incremented.
-To mitigate wasting copious amounts of memory, create the counter once, store a reference to it in an instance variable, and use that refence when incrementing the counter.
+As mentioned, this code can be quite inefficient when called repeatedly because the amount of memory used by Micrometer is directly proportional to the number of times the counter is incremented.
+To mitigate wasting copious amounts of memory, create the counter once, store a reference to it in an instance variable, and use that refence to increment the counter.
 
+[Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/CachedTaglessCounter.java)
 ```java
 /**
  * A service, responsible for making an ad request. A Counter is initialized once in the constructor and a reference to
@@ -116,6 +116,7 @@ The code above is much more efficient than the previous example because the coun
 
 Counters using `enum` tags offer a great way to keep track of a finite set of states, but introduce additional memory pressure through the creation and storage of tags.
 
+[Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/ReinstantiatedTaggedCounter.java)
 ```java
 /**
  * Makes a request and keeps track of the number of requests in each possible state. A counter is initialized with every
@@ -134,9 +135,10 @@ private enum PayloadState {
 }
 ```
 
-To prevent re-initializing a counter for each request. Create a counter for each possible `PayloadState` and cache the results in an `EnumMap`.
+To prevent re-initializing a counter on each request. Create a counter for each possible `PayloadState` and cache the results in an `EnumMap`.
 An `EnumMap` is an implementation of `Map` specifically used for `Enum` keys. Since every possible key is known, it stores values in an array, making insertion and retrieval faster than the traditional `HashMap`.
 
+[Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/CachedEnumMapTaggedCounter.java)
 ```java
 public abstract class AdRequestService {
 
@@ -210,10 +212,12 @@ To take this testing one step further, I set up a testing framework to test the 
 | 4. [Counter cahched in `EnumMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheEnumMapTagless.java) :large_blue_circle:    |                   17.687 | unmeasurable                             |
 | 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                   18.183 | unmeasurable                             |
 
-Every example which cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
+Every example that cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
 A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
 These superfluous objects are short-lived so they won't cause to out-of-memory errors, but they can trigger excessive GC usage which can hinder the application's performance.
-There is one caveat, this test is not at all indicative of how an application runs in the real world but it does exemplify the level of waste introduced when performance is not considered. 
+There is one caveat, this test is not at all indicative of how an application runs in the real world but it does exemplify the level of waste introduced when performance is not considered.
+
+// Add note about GC count
 
 ### Performance testing with Java Microbenchmark Harness (JMH)
 
