@@ -59,6 +59,7 @@ The rest of the article describes the patterns used to create counters efficient
 I already showed the simplest way to create a counter. The code example below will expand on this to display a full working example.
 The class below makes a request to an ad server. The way in which it makes the request is not important. What's important is how it keeps track of the number of requests made.
 
+F
 ```java
 /**
  * A service, responsible for making an ad request. A Counter is initialized every time a request is made to keep count
@@ -192,11 +193,11 @@ The [second project](https://github.com/LajosPolya/JMH-Test) contains the JMH te
 JMH recommends this two project approach to ensure that the benchmarks are correctly initialized and produce reliable results.
 I tested five options, these benchmarks are synonymous with the examples above, with the addition of one bonus test.
 
-1. Using Micrometer to create a counter every time it is incremented
-2. Creating a counter once, storing a reference to it, and using that reference to increment the counter.
-3. Using Micrometer to create a counter with one tag every time it is incremented
-4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter.
-5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter.
+1. Using Micrometer to create a counter every time it is incremented. :black_circle:
+2. Creating a counter once, storing a reference to it, and using that reference to increment the counter. :white_circle:
+3. Using Micrometer to create a counter with one tag every time it is incremented. :red_circle:
+4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :blue_circle:
+5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
 ### Performance testing with Java Flight Recorder (JFR)
 
