@@ -7,11 +7,7 @@ When you open a program, write a document, or watch a video, the goblin within y
 Memory is designed as a vast matrix of drawers, a large cabinet. Each drawer represents one byte of data.
 When every drawer is empty, the goblin inserts data starting at the first drawer and continues sequentially until every byte of data is stored away.
 When every drawer contains an item, the goblin opens the least recently used drawer. Instead of removing the old data, the goblin compresses it down with the new data until the former turns into dust, and voilà, the drawer only contains the new data.
-This goblin works relentlessly, never stopping for a break, vacation, or even a pay raise. But if it works too hard, it’ll eventually overheat, so we must give it a break.
-
-The idea of a memory goblin was brought to me by my most influential high school teacher, Anthony Viola, over 15 years ago. 
-He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly, the article described memory management as a goblin managing drawers or shelves.
-I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT, but they didn’t return any useful information.
+This goblin works relentlessly, never stopping for a break, vacation, or even a pay raise. But if it works too hard, it’ll eventually breakdown, so we must give it a break.
 
 ## A note on observability
 
@@ -245,8 +241,13 @@ It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` ta
 What's surprising is that using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 ## Final Thoughts
-It's necessary for an application to have an adequate amount of observability, but the generation of metrics can cause significant performance degradation if they're left unchecked.
-Therefore, it's important .........?
+It's necessary for an application to have an adequate amount of observability, but increasing observability can lead to significant performance degradation if the correct patterns aren't used.
+Therefore, it's important always keep memory usage in mind to keep the application running as efficiently as possible.
+
+### The Memory Goblin
+The idea of a memory goblin was brought to me by my most influential high school teacher, Anthony Viola, over 15 years ago.
+He mentioned that a prominent journal published an article about how computer memory works, and if I recall correctly, the article described memory management as a goblin managing drawers or shelves.
+I don’t remember the article’s title, the publisher, or the author. I tried looking for it using Gemini and ChatGPT, but they didn’t return any useful information.
 
 ### Relevant links
 * https://github.com/LajosPolya/Micrometer-Performance
