@@ -196,7 +196,7 @@ I tested five options, these benchmarks are synonymous with the examples above, 
 1. Using Micrometer to create a counter every time it is incremented. :black_circle:
 2. Creating a counter once, storing a reference to it, and using that reference to increment the counter. :white_circle:
 3. Using Micrometer to create a counter with one tag every time it is incremented. :red_circle:
-4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :blue_circle:
+4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :large_blue_circle:
 5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
 ### Performance testing with Java Flight Recorder (JFR)
@@ -206,13 +206,13 @@ JFR is a tool that runs alongside an application while recording low-level metri
 As mentioned previously, in a production environment, it was verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
 To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
 
-| Benchmark                                                           | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
-|---------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
-| 1. Uncached counter with zero tags                                  |                   18.095 | unmeasurable                             |
-| 2. Cached counter with zero tags                                    |               80,019.728 | `Meter$Id`                               |
-| 3. Uncached counter with one randomly chosen `enum` tag             |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
-| 4. Counter cahched in `EnumMap` with one randomly chosen `enum` tag |                   17.687 | unmeasurable                             |
-| 5. Counter cahched in `HashMap` with one randomly chosen `enum` tag |                   18.183 | unmeasurable                             |
+| Benchmark                                                                                  | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
+|--------------------------------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
+| 1. Uncached counter with zero tags :black_circle:                                          |                   18.095 | unmeasurable                             |
+| 2. Cached counter with zero tags :white_circle:                                            |               80,019.728 | `Meter$Id`                               |
+| 3. Uncached counter with one randomly chosen `enum` tag :red_circle:                       |              223,974.042 | `Tags`, `Tag[]`, `Meter$id`              |
+| 4. Counter cahched in `EnumMap` with one randomly chosen `enum` tag :large_blue_circle:    |                   17.687 | unmeasurable                             |
+| 5. Counter cahched in `HashMap` with one randomly chosen `enum` tag :large_orange_diamond: |                   18.183 | unmeasurable                             |
 
 Every example which cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used many orders of magnitude more memory.
 A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
@@ -229,13 +229,13 @@ Tagged counters contain one tag, created like this; `meterRegistry.counter("coun
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
 So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter.
 
-| Benchmark                                                 | Mode | Cnt |         Score |          Error | Units |
-|-----------------------------------------------------------|------|-----|--------------:|---------------:|-------|
-| 1. MicrometerCounterBenchmark.notCachedTaglessCounter     | avgt | 5   |        12.656 |  ±       0.354 | ns/op |
-| 2. MicrometerCounterBenchmark.cachedTaglessCounter        | avgt | 5   |         8.078 |  ±       0.161 | ns/op |
-| 3. MicrometerCounterBenchmark.notCachedTaggedCounters     | avgt | 5   |  27357777.939 |  ± 1053230.354 | ns/op |
-| 4. MicrometerCounterBenchmark.enumMapCachedTaggedCounters | avgt | 5   |   5719102.557 |  ±   19151.749 | ns/op |
-| 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
+| Benchmark                                                                        | Mode | Cnt |         Score |          Error | Units |
+|----------------------------------------------------------------------------------|------|-----|--------------:|---------------:|-------|
+| 1. MicrometerCounterBenchmark.notCachedTaglessCounter :black_circle:             | avgt | 5   |        12.656 |  ±       0.354 | ns/op |
+| 2. MicrometerCounterBenchmark.cachedTaglessCounter :white_circle:                | avgt | 5   |         8.078 |  ±       0.161 | ns/op |
+| 3. MicrometerCounterBenchmark.notCachedTaggedCounters :red_circle:               | avgt | 5   |  27357777.939 |  ± 1053230.354 | ns/op |
+| 4. MicrometerCounterBenchmark.enumMapCachedTaggedCounters :large_blue_circle:    | avgt | 5   |   5719102.557 |  ±   19151.749 | ns/op |
+| 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters :large_orange_diamond: | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
 
 #### Untagged Counters
 It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs when it's not.
