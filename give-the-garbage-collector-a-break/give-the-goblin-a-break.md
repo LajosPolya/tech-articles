@@ -225,4 +225,5 @@ Therefore, it's important always keep memory usage in mind to keep the applicati
 * https://github.com/LajosPolya/JMH-Test
 * https://github.com/micrometer-metrics/micrometer/wiki/Performance:-criticality-of-code-paths
 * https://vertx.io/blog/micrometer-metrics-performance/
+* https://github.com/micrometer-metrics/micrometer/pull/6670
 * https://docs.micrometer.io/micrometer/reference/concepts/meter-provider.html
