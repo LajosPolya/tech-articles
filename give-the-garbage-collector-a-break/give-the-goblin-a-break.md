@@ -1,4 +1,4 @@
-# Give the memory goblin a break! (Excessive memory consumption)
+# Give the Garbage Collector a break!
 This article explores reducing the performance impact of observability metrics by evaluating their cost in terms of memory and CPU usage.
 
 ## A note on observability
