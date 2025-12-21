@@ -4,7 +4,7 @@ This article explores reducing the performance impact of observability metrics b
 ## A note on observability
 For the past two years, I’ve been working on an ad exchange written in Java. It’s an incredible piece of software that transacts millions of auctions every second in an environment where every millisecond counts.
 
-Observability metrics are an important tool for maintaining a reliable system. If the occurrence of an error isn't surfaced, then it can't be fixed. If auction trends aren't made visible, they can't be used to gain an advantage.
+Observability metrics are crucial for maintaining a reliable system. If the occurrence of an error isn't surfaced, then it can't be fixed. If auction trends aren't made visible, they can't be used to gain an advantage.
 Over the course of a few days, trillions of measurements and thousands of metrics are registered in the exchange. These metrics track things like error rates, ad spend, response times, and the number of bids.
 Each metric plays an important role in revealing the overall health of the exchange. A sharp increase in the error rate of an operation would be a loud signal that something is wrong. Likewise, an increase in the response time of an API could be a hint at infrastructure scaling issues.
 
