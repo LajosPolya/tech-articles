@@ -123,7 +123,7 @@ private enum PayloadState {
 ```
 
 To prevent re-initializing a counter on each request. A counter for each possible `PayloadState` should be created and cached in an `EnumMap`.
-An `EnumMap` is an implementation of `Map` specifically used for `Enum` keys. Since every possible key is known, values are stored in an array, making insertion and retrieval faster than the traditional `HashMap`.
+An `EnumMap` is an implementation of `Map` specifically used for `enum` keys. Since every possible key is known, values are stored in an array, making insertion and retrieval faster than the traditional `HashMap`.
 
 [Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/CachedEnumMapTaggedCounter.java)
 ```java
@@ -213,7 +213,7 @@ So each tagged benchmark is really testing 1,000,000 iterations, while the untag
 It takes about 1/3 fewer CPU cycles to increment a counter when it's cached vs when isn't.
 
 #### Tagged Counters
-It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when isn't cached.
+It takes about 5 times fewer CPU cycles to increment a counter with an `enum` tag when it's cached in an `EnumMap` vs when isn't cached.
 Surprisingly, using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 ## Final Thoughts
