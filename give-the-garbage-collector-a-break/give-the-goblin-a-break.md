@@ -138,7 +138,7 @@ public abstract class AdRequestService {
     }
 
     /**
-     * Upon construction, a instance of Counter is created for each possible state. These counters are stored in an 
+     * Upon construction, an instance of Counter is created for each possible state. These counters are stored in an 
      * EnumMap for fast retrieval.
      */
     private Map<PayloadState, Counter> getCounters() {
