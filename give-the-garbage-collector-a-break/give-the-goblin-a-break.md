@@ -97,7 +97,7 @@ public abstract class AdRequestService {
 }
 ```
 
-The code above is now much more efficient than the previous example because the counter is only created once!
+The code above is now much more efficient than the previous example since the counter is only created once!
 
 #### Counters with Enum tags
 
@@ -189,8 +189,8 @@ To take this testing one step further, I set up a testing framework to test the 
 | 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                   18.183 | unmeasurable                             |
 
 Every test that cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used orders of magnitude more memory.
-A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
-These superfluous objects are short-lived so they won't cause out-of-memory errors, but their existence may trigger the GC excessively, taking up resources and hindering the application's performance.
+A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of two more objects; `Tags` and `Tag[]`.
+These superfluous objects won't cause out-of-memory errors because they are short-lived, but their existence may trigger the GC excessively, taking up resources and hindering the application's performance.
 In the tests where metrics weren't cached, the GC was invoked hundreds of times, in a rather short period of time. Surprisingly, the GC was never invoked in tests that cached their metrics. 
 This test isn't indicative of how an application runs in the real world, but it does exemplify the level of waste introduced when performance isn't considered!
 
