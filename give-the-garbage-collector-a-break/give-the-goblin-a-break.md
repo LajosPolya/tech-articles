@@ -164,7 +164,7 @@ public abstract class AdRequestService {
 ## Performance Testing
 To compare the relative performance of these approaches, I created two projects to test different ways of creating and caching counters.
 The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
-The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) testing harness. JMH is a JVM tool specializing in performance testing applications where nanosecond accuracy is a necessary.
+The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) framework. JMH is a tool with the JVM specializing in performance testing applications where nanosecond accuracy is a necessary.
 JMH recommends this two project approach to ensure the benchmarks are correctly initialized and produce reliable results.
 
 I tested five scenarios:
