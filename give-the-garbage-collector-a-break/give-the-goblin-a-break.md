@@ -165,7 +165,7 @@ public abstract class AdRequestService {
 To compare the relative performance of these approaches, I created two projects to test different ways of creating and caching counters.
 The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
 The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) testing harness. JMH is a JVM tool specializing in performance testing applications where nanosecond accuracy is a necessary.
-JMH recommends this two project approach to ensure that the benchmarks are correctly initialized and produce reliable results.
+JMH recommends this two project approach to ensure the benchmarks are correctly initialized and produce reliable results.
 
 I tested five scenarios:
 1. Using Micrometer to create a counter every time it is incremented. :black_circle:
@@ -177,7 +177,7 @@ I tested five scenarios:
 ### Performance testing with Java Flight Recorder (JFR)
 JFR is a tool that runs alongside an application while recording low-level metrics about it, such as, memory usage and CPU profiling.  
 
-In a production environment, JFR verified that the exchange's memory consumption relating to Micrometer was reduced by 2%.
+In a production environment, JFR verified the exchange's memory consumption relating to Micrometer was reduced by 2%.
 To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
 
 | Benchmark                                                                                                                                                                                                                     | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
@@ -214,7 +214,7 @@ It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs 
 
 #### Tagged Counters
 It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when it's not cached.
-What's surprising is that using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
+What's surprising is using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 ## Final Thoughts
 It's necessary for an application to have an adequate amount of observability, but increasing observability can lead to significant performance degradation if the correct patterns aren't used.
