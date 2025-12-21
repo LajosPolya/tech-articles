@@ -194,7 +194,7 @@ These superfluous objects are short-lived so they won't cause out-of-memory erro
 In the tests where metrics weren't cached, the GC was invoked hundreds of times, in a rather short period of time. Surprisingly, the GC was never invoked in tests that cached their metrics. 
 This test isn't indicative of how an application runs in the real world, but it does exemplify the level of waste introduced when performance isn't considered!
 
-### Performance testing with JMH
+### Benchmarking with JMH
 The single threaded [benchmarks](https://github.com/LajosPolya/JMH-Test/blob/main/src/main/java/com/github/lajospolya/MicrometerCounterBenchmark.java) are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter; `meterRegistry.counter("counter")`.
 Tagged counters contain at least one tag; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
