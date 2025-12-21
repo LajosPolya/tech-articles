@@ -193,12 +193,11 @@ To take this testing one step further, I set up a testing framework to test the 
 | 4. [Counter cahched in `EnumMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheEnumMapTagless.java) :large_blue_circle:    |                   17.687 | unmeasurable                             |
 | 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                   18.183 | unmeasurable                             |
 
-Every example that cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used orders of magnitude more memory.
+Every test that cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used orders of magnitude more memory.
 A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
 These superfluous objects are short-lived so they won't cause to out-of-memory errors, but they can trigger excessive GC usage which can hinder the application's performance.
-This test is not indicative of how an application runs in the real world but it does exemplify the level of waste introduced when performance is not considered!
-
-// Add note about GC count
+In the tests where metrics weren't cached, the GC was invoked 188 and 521 times for tagless and tagged metrics, respectively. Surprisingly, the GC was never invoked in tests that cached their metrics. 
+This test is not indicative of how an application runs in the real world, but it does exemplify the level of waste introduced when performance is not considered!
 
 ### Performance testing with JMH
 The single threaded [benchmarks](https://github.com/LajosPolya/JMH-Test/blob/main/src/main/java/com/github/lajospolya/MicrometerCounterBenchmark.java) are broken down into two categories; "tagless" and "tagged".
