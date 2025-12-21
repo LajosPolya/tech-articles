@@ -174,7 +174,7 @@ I tested five scenarios:
 4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :large_blue_circle:
 5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
-### Performance testing with Java Flight Recorder (JFR)
+### Gathering performance metrics with Java Flight Recorder (JFR)
 JFR is a tool that runs alongside an application while recording low-level metrics about it, such as, memory usage and CPU profiling.  
 
 In a production environment, JFR verified the exchange's memory consumption relating to Micrometer was reduced by 2%.
