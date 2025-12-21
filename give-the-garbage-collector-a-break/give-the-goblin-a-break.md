@@ -8,7 +8,7 @@ Observability metrics are an important tool for maintaining a reliable system. I
 Over the course of a few days, trillions of measurements and thousands of metrics are registered in the exchange. These metrics track things like error rates, ad spend, response times, and the number of bids.
 Each metric plays an important role in revealing the overall health of the exchange. A sharp increase in the error rate of an operation would be a loud signal that something is wrong. Likewise, an increase in the response time of an API could be a hint at infrastructure scaling issues.
 
-Unfortunately, metrics aren't free. There is a delicate tradeoff between performance and observability. Having more observation data can lead to better conclusions about the state of the application, but creating an excessive number of metrics can itself be detrimental to performance.
+Unfortunately, metrics aren't free. There's a delicate tradeoff between performance and observability. Having more observation data can lead to better conclusions about the state of the application, but creating an excessive number of metrics can itself be detrimental to performance.
 
 ## Micrometer 
 The exchange employs Micrometer as its observability engine, specifically the Prometheus flavour.
@@ -42,7 +42,7 @@ The rest of the article describes the patterns used to create counters efficient
 
 #### A simple counter
 
-The next code example will expand on the first example. The class below makes a request to an ad server. The way it makes the request is not important. What's important is how it keeps track of the number of requests made.
+The next code example will expand on the first example. The class below makes a request to an ad server. The way a request is made isn't important. What's important is how the count of requests are tracked.
 
 [Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/ReinstantiatedTaglessCounter.java)
 ```java
@@ -168,9 +168,9 @@ The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java M
 JMH recommends this two project approach to ensure the benchmarks are correctly initialized and produce reliable results.
 
 I tested five scenarios:
-1. Using Micrometer to create a counter every time it is incremented. :black_circle:
+1. Using Micrometer to create a counter every time it's incremented. :black_circle:
 2. Creating a counter once, storing a reference to it, and using that reference to increment the counter. :white_circle:
-3. Using Micrometer to create a counter with one tag every time it is incremented. :red_circle:
+3. Using Micrometer to create a counter with one tag every time it's incremented. :red_circle:
 4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :large_blue_circle:
 5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
@@ -192,14 +192,14 @@ Every test that cached its counters used about `~18MiB` of memory. What's amazin
 A counter with zero tags utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of `Tags` and `Tag[]`.
 These superfluous objects are short-lived so they won't cause out-of-memory errors, but their existence may trigger the GC excessively, taking up resources and hindering the application's performance.
 In the tests where metrics weren't cached, the GC was invoked hundreds of times, in a rather short period of time. Surprisingly, the GC was never invoked in tests that cached their metrics. 
-This test is not indicative of how an application runs in the real world, but it does exemplify the level of waste introduced when performance is not considered!
+This test isn't indicative of how an application runs in the real world, but it does exemplify the level of waste introduced when performance isn't considered!
 
 ### Performance testing with JMH
 The single threaded [benchmarks](https://github.com/LajosPolya/JMH-Test/blob/main/src/main/java/com/github/lajospolya/MicrometerCounterBenchmark.java) are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter; `meterRegistry.counter("counter")`.
 Tagged counters contain at least one tag; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
-So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter. The results of the two types of tests should not be compared.
+So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter. The results of the two types of tests shouldn't be compared.
 
 | Benchmark                                                                        | Mode | Cnt |         Score |          Error | Units |
 |----------------------------------------------------------------------------------|------|-----|--------------:|---------------:|-------|
@@ -210,11 +210,11 @@ So each tagged benchmark is really testing 1,000,000 iterations, while the untag
 | 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters :large_orange_diamond: | avgt | 5   |   6421308.149 |  ±   24017.314 | ns/op |
 
 #### Untagged Counters
-It takes about 1/3 fewer CPU cycles to increment a counter when it is cached vs when it's not.
+It takes about 1/3 fewer CPU cycles to increment a counter when it's cached vs when isn't.
 
 #### Tagged Counters
-It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when it's not cached.
-What's surprising is using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
+It takes about 5 times fewer CPU cycles to increment a counter with an `Enum` tag when it's cached in an `EnumMap` vs when isn't cached.
+Surprisingly, using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 ## Final Thoughts
 It's necessary for an application to have an adequate amount of observability, but increasing observability can lead to significant performance degradation if the correct patterns aren't used.
