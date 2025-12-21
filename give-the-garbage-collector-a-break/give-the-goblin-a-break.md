@@ -88,15 +88,12 @@ public abstract class AdRequestService {
     }
 
     /**
-     * Makes a request via {@link #makeRequest}. A reference to the counter is used to keep track of the number of 
-     * requests made.
+     * Makes a request. A reference to the counter is used to keep track of the number of requests made.
      */
     public fetch() {
         makeRequest();
         numberOfAdRequest.increment();
     }
-
-    protected abstract void makeRequest();
 }
 ```
 
@@ -153,16 +150,14 @@ public abstract class AdRequestService {
     }
 
     /**
-     * Makes a request via {@link #makeRequest}. Keeps track of the number of requests for each possible state. 
-     * An existing counter is fetched from the cache ({@link #counters}) to prevent the creation of a counter for each
+     * Makes a request and keeps track of the number of requests for each possible state. An existing counter is fetched
+     * from the cache ({@link #counters}) to prevent the creation of a counter for each
      * request.
      */
     public void fetch() {
         PayloadState state = makeRequest();
         counters.get(state).increment();
     }
-
-    protected abstract PayloadState makeRequest();
 }
 ```
 
