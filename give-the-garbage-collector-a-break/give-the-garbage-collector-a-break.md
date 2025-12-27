@@ -201,13 +201,13 @@ Tagged counters contain at least one tag; `meterRegistry.counter("counter", "tag
 The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
 So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter. The results of the two types of tests shouldn't be compared.
 
-| Benchmark                                                                        | Score (ns/op) | Error (ns/op) |
-|----------------------------------------------------------------------------------|--------------:|--------------:|
-| 1. MicrometerCounterBenchmark.notCachedTaglessCounter :black_circle:             |        12.656 | ±       0.354 |
-| 2. MicrometerCounterBenchmark.cachedTaglessCounter :white_circle:                |         8.078 | ±       0.161 |
-| 3. MicrometerCounterBenchmark.notCachedTaggedCounters :red_circle:               |  27357777.939 | ± 1053230.354 |
-| 4. MicrometerCounterBenchmark.enumMapCachedTaggedCounters :large_blue_circle:    |   5719102.557 | ±   19151.749 |
-| 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters :large_orange_diamond: |   6421308.149 | ±   24017.314 |
+| Benchmark                                                                        |  Score (ns/op) |   Error (ns/op) |
+|----------------------------------------------------------------------------------|---------------:|----------------:|
+| 1. MicrometerCounterBenchmark.notCachedTaglessCounter :black_circle:             |         12.656 |   ±       0.354 |
+| 2. MicrometerCounterBenchmark.cachedTaglessCounter :white_circle:                |          8.078 |   ±       0.161 |
+| 3. MicrometerCounterBenchmark.notCachedTaggedCounters :red_circle:               | 27,357,777.939 | ± 1,053,230.354 |
+| 4. MicrometerCounterBenchmark.enumMapCachedTaggedCounters :large_blue_circle:    |  5,719,102.557 |  ±   19,151.749 |
+| 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters :large_orange_diamond: |  6,421,308.149 |  ±   24,017.314 |
 
 #### Untagged Counters
 It takes about 1/3 fewer CPU cycles to increment a counter when it's cached vs when isn't.
