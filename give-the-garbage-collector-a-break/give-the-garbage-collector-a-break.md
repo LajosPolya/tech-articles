@@ -198,8 +198,8 @@ This test isn't indicative of how an application runs in the real world, but it 
 The single threaded [benchmarks](https://github.com/LajosPolya/JMH-Test/blob/main/src/main/java/com/github/lajospolya/MicrometerCounterBenchmark.java) are broken down into two categories; "tagless" and "tagged".
 Tagless counters are the simplest example of a counter; `meterRegistry.counter("counter")`.
 Tagged counters contain at least one tag; `meterRegistry.counter("counter", "tag_key", "tag_value")`.
-The reason the tagged benchmarks are many orders of magnitude slower than the untagged is because in order to randomly test counters with many different tags, I had to run the benchmark in a loop.
-So each tagged benchmark is really testing 1,000,000 iterations, while the untagged benchmarks only increment one counter. The results of the two types of tests shouldn't be compared.
+The tagged benchmarks are many orders of magnitude slower than the untagged benchmarks. This is because the tagged benchmarks were run in a loop, where each iteration incremented the counter with a randomly selected tag.
+Each tagged benchmark is actually testing one million iterations, while the untagged benchmarks only increment one counter. The results of the two types of tests shouldn't be compared.
 
 | Benchmark                                                                        |  Score (ns/op) |   Error (ns/op) |
 |----------------------------------------------------------------------------------|---------------:|----------------:|
