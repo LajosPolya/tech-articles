@@ -12,13 +12,13 @@ Unfortunately, metrics aren't free. There's a delicate tradeoff between performa
 
 ## Micrometer 
 The exchange employs Micrometer as its observability engine, specifically the Prometheus flavour.
-Micrometer supports the following types of *meters*: counters, gauges, timers, and distribution summaries. Going forward, the examples will only use counters since they're used most often and are the simplest to understand.
+Micrometer supports the following types of *meters*: counters, gauges, timers, and distribution summaries. Moving ahead, the examples will only focus on counters since they're used most often and are the simplest to understand.
 
 *Counters* keep track of the number of times an event occurs.
 
 Going forward, there are a few definitions and pitfalls to cover:
 1. `MeterRegistry` is the interface provided by Micrometer to produce and manage the application's meters, such as its counters.
-2. In most modern applications, an instance of `MeterRegistry` is injected into the application, for simplicity, assume the same happens here.
+2. In most modern applications, an instance of `MeterRegistry` is injected into the application. For simplicity, assume the same happens here.
 3. The code snippets shared here are incomplete, but the complete code for each example will be linked.
 
 Here's a simplified example of how an instance of `MeterRegistry` is used to create and increment a counter:
@@ -27,7 +27,7 @@ Here's a simplified example of how an instance of `MeterRegistry` is used to cre
 meterRegistry.counter("number_of_request").increment();
 ```
 
-This operation may appear simple and benign, but it's insidious in nature because a lot is happening the hood.
+This operation may appear simple and benign, but it's insidious in nature because a lot is happening under the hood.
 Every time a counter is *initialized in this way*, Micrometer constructs multiple holding objects that contain the counter's name, ID, and tags (if used).
 After initialization, Micrometer attempts to register the counter if it hasn't already done so.
 When this single counter is repeatedly constructed, it has the potential to create a tremendous amount of memory pressure.
@@ -38,11 +38,12 @@ Most of this memory could be easily removed by rethinking when and how counters 
 
 By rethinking the exchange's approach to counter management, the amount of memory used by Micrometer was reduced from occupying 3% of application memory to only 1%, freeing 2% of memory for other important operations. 
 Tools such as Java Flight Recorder (JFR) and JDK Mission Control were used to calculate memory usage estimations.
+
 The rest of the article describes the patterns used to create counters efficiently, reducing CPU and memory usage.
 
 #### A simple counter
 
-The next code example will expand on the first example. The class below makes a request to an ad server. The way a request is made isn't important. What's important is how the count of requests are tracked.
+The next example expands on the first. The class below makes a request to an ad server. The way a request is made isn't important. What's important is how the count of requests are tracked.
 
 [Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/ReinstantiatedTaglessCounter.java)
 ```java
@@ -164,7 +165,7 @@ public abstract class AdRequestService {
 ## Performance Testing
 To compare the relative performance of these approaches, I created two projects to test different ways of creating and caching counters.
 The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
-The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) framework. JMH is a tool with the JVM specializing in performance testing applications where nanosecond accuracy is a necessary.
+The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) framework. JMH is a tool within the JVM that specializes in performance testing applications, offering nanosecond precision.
 JMH recommends this two project approach to ensure the benchmarks are correctly initialized and produce reliable results.
 
 I tested five scenarios:
@@ -172,7 +173,7 @@ I tested five scenarios:
 2. Creating a counter once, storing a reference to it, and using that reference to increment the counter. :white_circle:
 3. Using Micrometer to create a counter with one tag every time it's incremented. :red_circle:
 4. Creating each counter once, for every possible tag value, storing a reference to the counters in an `EnumMap`, and using that map to increment the relevant counter. :large_blue_circle:
-5. Creating each counter once, for every possible tag value, storing a reference to the counters in an `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
+5. Creating each counter once, for every possible tag value, storing a reference to the counters in a `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
 ### Gathering performance metrics with Java Flight Recorder (JFR)
 JFR is a tool that runs alongside an application while recording low-level metrics about it, such as, memory usage and CPU profiling.  
@@ -182,8 +183,8 @@ To take this testing one step further, I set up a testing framework to test the 
 
 | Benchmark                                                                                                                                                                                                                     | Total Memory Usage (MiB) | Most Memory Intensive Micrometer Classes |
 |-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------:|:-----------------------------------------|
-| 1. [Uncached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainReinstantiateTagless.java) :black_circle:                                         |                       18 | insignificant                            |
-| 2. [Cached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheTagless.java) :white_circle:                                                   |                   80,020 | `Meter$Id`                               |
+| 1. [Uncached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainReinstantiateTagless.java) :black_circle:                                         |                   80,020 | `Meter$Id`                               |
+| 2. [Cached counter with zero tags](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheTagless.java) :white_circle:                                                   |                       18 | insignificant                            |
 | 3. [Uncached counter with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainReinstantiateTagged.java) :red_circle:                       |                  223,974 | `Tags`, `Tag[]`, `Meter$id`              |
 | 4. [Counter cahched in `EnumMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheEnumMapTagless.java) :large_blue_circle:    |                       18 | insignificant                            |
 | 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                       18 | insignificant                            |
@@ -218,7 +219,7 @@ Surprisingly, using a `HashMap` in a single-threaded environment is only about 1
 
 ## Final Thoughts
 It's necessary for an application to have an adequate amount of observability, but increasing observability can lead to significant performance degradation if the correct patterns aren't used.
-Therefore, it's important always keep memory usage in mind to keep the application running as efficiently as possible.
+Therefore, it's important to always keep memory usage in mind to keep the application running as efficiently as possible.
 
 ### Relevant links
 * https://github.com/LajosPolya/Micrometer-Performance
