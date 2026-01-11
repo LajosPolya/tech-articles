@@ -189,7 +189,7 @@ To take this testing one step further, I set up a testing framework to test the 
 | 4. [Counter cahched in `EnumMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheEnumMapTagless.java) :large_blue_circle:    |                       18 | insignificant                            |
 | 5. [Counter cahched in `HashMap` with one randomly chosen `enum` tag](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/MainCacheHashMapTagless.java) :large_orange_diamond: |                       18 | insignificant                            |
 
-Every test that cached its counters used about `~18MiB` of memory. What's amazing is when the counters weren't cached, they used orders of magnitude more memory.
+Every test that cached its counters used `~18MiB` of memory. What's amazing is when the counters weren't cached, they used orders of magnitude more memory.
 The repeated creation of a counter with zero tags needlessly utilized `~80GiB` of memory, mostly for the construction of `Meter$Id`. When a tag was introduced, the memory usage tripled to `~224GiB` because the construction of each counter introduced the instantiation of two more objects; `Tags` and `Tag[]`.
 These superfluous objects won't cause out-of-memory errors because they are short-lived, but their existence may trigger the GC excessively, unnecessarily taking up resources and hindering the application's performance.
 In the tests where metrics weren't cached, the GC was invoked hundreds of times, in a rather short period of time. Surprisingly, the GC was never invoked in tests that cached their metrics. 
