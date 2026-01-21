@@ -43,7 +43,7 @@ The rest of the article describes the patterns used to create counters efficient
 
 #### A simple counter
 
-The next example expands on the first. The class below makes a request to an ad server. The way a request is made isn't important. What's important is how the count of requests are tracked.
+The next example expands on the first. The class below makes a request to an ad server. The way a request is made isn't important. What's important is how the count of requests is tracked.
 
 [Full example here:](https://github.com/LajosPolya/Micrometer-Performance/blob/main/src/main/java/com/github/lajospolya/meterRegistry/ReinstantiatedTaglessCounter.java)
 ```java
@@ -166,7 +166,7 @@ public abstract class AdRequestService {
 To compare the relative performance of these approaches, I created two projects to test different ways of creating and caching counters.
 The [first project](https://github.com/LajosPolya/Micrometer-Performance) contains various example patterns used to create and increment counters.
 The [second project](https://github.com/LajosPolya/JMH-Test) contains the Java Microbenchmark Harness (JMH) framework. JMH is a tool within the JVM that specializes in performance testing applications, offering nanosecond precision.
-JMH recommends this two project approach to ensure the benchmarks are correctly initialized and produce reliable results.
+JMH recommends this two-project approach to ensure the benchmarks are correctly initialized and produce reliable results.
 
 I tested five scenarios:
 1. Using Micrometer to create a counter every time it's incremented. :black_circle:
@@ -176,7 +176,7 @@ I tested five scenarios:
 5. Creating each counter once, for every possible tag value, storing a reference to the counters in a `HashMap`, and using that map to increment the relevant counter. :large_orange_diamond:
 
 ### Gathering performance metrics with Java Flight Recorder (JFR)
-JFR is a tool that runs alongside an application while recording low-level metrics about it, such as, memory usage and CPU profiling.  
+JFR is a tool that runs alongside an application while recording low-level metrics about it, such as memory usage and CPU profiling.  
 
 In a production environment, JFR verified the exchange's memory consumption relating to Micrometer was reduced by 2%.
 To take this testing one step further, I set up a testing framework to test the memory consumption of an application that increments a counter 2<sup>31</sup>-1 (2,147,483,647) times.
@@ -211,10 +211,10 @@ Each tagged benchmark is actually testing one million iterations, while the unta
 | 5. MicrometerCounterBenchmark.hashMapCachedTaggedCounters :large_orange_diamond: |  6,421,308.149 |  ±   24,017.314 |
 
 #### Untagged Counters
-It takes about 1/3 fewer CPU cycles to increment a counter when it's cached vs when isn't.
+It takes about 1/3 fewer CPU cycles to increment a counter when it's cached vs when it isn't.
 
 #### Tagged Counters
-It takes about 5 times fewer CPU cycles to increment a counter with an `enum` tag when it's cached in an `EnumMap` vs when isn't cached.
+It takes about 5 times fewer CPU cycles to increment a counter with an `enum` tag when it's cached in an `EnumMap` vs when it isn't cached.
 Surprisingly, using a `HashMap` in a single-threaded environment is only about 11% slower than using an `EnumMap`.
 
 ## Final Thoughts
